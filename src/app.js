@@ -2,6 +2,7 @@ const express = require('express');
 const session = require('express-session');
 const SQLiteStore = require('connect-sqlite3')(session);
 const path = require('path');
+const fs = require('fs');
 const app = express();
 
 
@@ -27,6 +28,12 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 
 
+
+// Asegurar que la carpeta de sesiones exista en deploy
+const sessionsDir = path.join(__dirname, '..', 'data');
+if (!fs.existsSync(sessionsDir)) {
+    fs.mkdirSync(sessionsDir, { recursive: true });
+}
 
 // Configuración de sesiones
 app.use(session({
