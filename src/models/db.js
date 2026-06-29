@@ -1,11 +1,11 @@
 const fs = require('fs');
 const os = require('os');
-const path = require('path')
+const path = require('path');
 const sqlite3 = require('sqlite3').verbose();
+const bcrypt = require('bcryptjs');
 
 const defaultDbDir = path.join(__dirname, '../db');
 let dbDir = defaultDbDir;
-let fallbackDbDir;
 
 const ensureWritableDir = (dir) => {
     try {
@@ -20,7 +20,7 @@ const ensureWritableDir = (dir) => {
 };
 
 if (!ensureWritableDir(dbDir)) {
-    fallbackDbDir = path.join(os.tmpdir(), 'ingresos-db');
+    const fallbackDbDir = path.join(os.tmpdir(), 'ingresos-db');
     if (!ensureWritableDir(fallbackDbDir)) {
         throw new Error(`No se puede crear ni escribir en el directorio de la base de datos SQLite: ${fallbackDbDir}`);
     }
@@ -38,14 +38,60 @@ const db = new sqlite3.Database(dbPath, sqlite3.OPEN_READWRITE | sqlite3.OPEN_CR
         console.error('Error abriendo la base de datos SQLite:', dbPath, err);
         return;
     }
+
     console.log('SQLite database opened successfully at', dbPath);
-    db.run("PRAGMA foreign_keys = ON", (pragmaErr) => {
-        if (pragmaErr) {
-            console.error('Error al activar foreign_keys:', pragmaErr);
-        }
+    db.serialize(() => {
+        db.run("PRAGMA foreign_keys = ON");
+
+        db.run(`
+            CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                username TEXT NOT NULL UNIQUE,
+                password TEXT NOT NULL,
+                is_admin INTEGER NOT NULL DEFAULT 0,
+                is_active INTEGER NOT NULL DEFAULT 0,
+                last_login TEXT,
+                created_at TEXT DEFAULT CURRENT_TIMESTAMP
+            )
+        `, (createErr) => {
+            if (createErr) {
+                console.error('Error creando tabla users:', createErr);
+                return;
+            }
+
+            db.get(`SELECT COUNT(*) AS count FROM users`, [], async (countErr, row) => {
+                if (countErr) {
+                    console.error('Error contando usuarios:', countErr);
+                    return;
+                }
+
+                if (row && row.count === 0) {
+                    const adminName = process.env.ADMIN_NAME || 'Administrador';
+                    const adminUsername = process.env.ADMIN_USERNAME || 'admin';
+                    const adminPassword = process.env.ADMIN_PASSWORD || 'Admin123!';
+
+                    try {
+                        const hashedPassword = await bcrypt.hash(adminPassword, 12);
+                        db.run(`
+                            INSERT INTO users (name, username, password, is_admin, is_active)
+                            VALUES (?, ?, ?, 1, 1)
+                        `, [adminName, adminUsername, hashedPassword], function (insertErr) {
+                            if (insertErr) {
+                                console.error('Error insertando usuario admin inicial:', insertErr);
+                                return;
+                            }
+
+                            console.log(`Usuario admin inicial creado: ${adminUsername}`);
+                            console.log('Si estás usando credenciales por defecto, cambia ADMIN_USERNAME y ADMIN_PASSWORD en el despliegue.');
+                        });
+                    } catch (hashErr) {
+                        console.error('Error generando contraseña admin:', hashErr);
+                    }
+                }
+            });
+        });
     });
 });
-
-module.exports = db;
 
 module.exports = db;

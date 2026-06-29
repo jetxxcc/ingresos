@@ -1,15 +1,16 @@
 const path = require('path');
 const fs = require('fs');
+const os = require('os');
 const { exec } = require('child_process');
 require('dotenv').config();
 
 class BackupHelper {
     constructor() {
         this.dbDir = path.join(__dirname, '..', 'db');
-        //this.backupDir = path.join(this.dbDir, 'backups', 'auto'); este se guara en db/backups/auto
-         this.backupDir = process.env.ROUTEBACKUP;
+        this.backupDir = process.env.ROUTEBACKUP || path.join(this.dbDir, 'backups', 'auto');
         this.autoBackupFile = path.join(this.backupDir, 'backup.db');
-        this.sqlite3Path = path.join(this.dbDir, 'sqlite3.exe');
+        const sqliteBinary = process.platform === 'win32' ? 'sqlite3.exe' : 'sqlite3';
+        this.sqlite3Path = path.join(this.dbDir, sqliteBinary);
         this.ensureDirectoriesExist();
     }
 
@@ -27,8 +28,11 @@ class BackupHelper {
                 return reject(new Error(`La base de datos no existe en: ${dbPath}`));
             }
 
-            if (!fs.existsSync(this.sqlite3Path)) {
-                return reject(new Error(`sqlite3.exe no encontrado en: ${this.sqlite3Path}`));
+            const useSqlite3 = fs.existsSync(this.sqlite3Path);
+
+            if (!useSqlite3) {
+                console.warn(`No se encontró sqlite3 binario en: ${this.sqlite3Path}. Usando copia directa.`);
+                return this.tryAlternativeBackupMethod().then(resolve).catch(reject);
             }
 
             // ELIMINAR el archivo de backup existente si está vacío o corrupto
@@ -40,11 +44,8 @@ class BackupHelper {
                 }
             }
 
-            console.log('Ejecutando backup con sqlite3.exe...');
-            
-            // Comando mejorado para backup
+            console.log('Ejecutando backup con sqlite3...');
             const command = `cd "${this.dbDir}" && "${this.sqlite3Path}" "database.db" ".backup '${this.autoBackupFile}'"`;
-            
             console.log('Ejecutando comando:', command);
             
             exec(command, (error, stdout, stderr) => {
