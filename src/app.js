@@ -30,9 +30,27 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 
 // Asegurar que la carpeta de sesiones exista en deploy
-const sessionsDir = path.join(__dirname, '..', 'data');
-if (!fs.existsSync(sessionsDir)) {
-    fs.mkdirSync(sessionsDir, { recursive: true });
+const os = require('os');
+const projectRoot = path.join(__dirname, '..');
+let sessionsDir = path.join(projectRoot, 'data');
+
+const ensureDirWritable = (dir) => {
+    try {
+        if (!fs.existsSync(dir)) {
+            fs.mkdirSync(dir, { recursive: true });
+        }
+        fs.accessSync(dir, fs.constants.W_OK);
+        return true;
+    } catch (err) {
+        return false;
+    }
+};
+
+if (!ensureDirWritable(sessionsDir)) {
+    sessionsDir = path.join(os.tmpdir(), 'ingresos-sessions');
+    if (!ensureDirWritable(sessionsDir)) {
+        throw new Error(`No se puede crear ni escribir en el directorio de sesiones: ${sessionsDir}`);
+    }
 }
 console.log('Sesiones SQLite dir:', sessionsDir);
 
