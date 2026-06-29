@@ -34,13 +34,14 @@ const sessionsDir = path.join(__dirname, '..', 'data');
 if (!fs.existsSync(sessionsDir)) {
     fs.mkdirSync(sessionsDir, { recursive: true });
 }
+console.log('Sesiones SQLite dir:', sessionsDir);
 
 // Configuración de sesiones
 app.use(session({
         store: new SQLiteStore({
         db: 'sessions.db', // Nombre del archivo de la base de datos para sesiones
         table: 'sessions', // Nombre de la tabla para almacenar sesiones
-        dir: './data', // Directorio donde se guardará la DB
+        dir: sessionsDir, // Directorio absoluto para la DB de sesiones
         concurrentDB: true // Permite múltiples conexiones
 
 //         Cuando un servidor se reinicia, como lo hace con nodemon o PM2, la memoria de la aplicación se borra. Si la sesión se almacena en la memoria del servidor (que es el comportamiento por defecto de express-session), todos los datos de la sesión se pierden, y los usuarios son forzados a iniciar sesión de nuevo.
