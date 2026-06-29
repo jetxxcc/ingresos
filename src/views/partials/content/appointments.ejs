@@ -1,0 +1,247 @@
+<div class="main-father" id="main-window">
+  <div class="main-child">
+    <div class="container">
+      <div class="content-example">
+        <h1 class="text-2xl font-bold mb-4">Gestión de citas</h1>
+
+        <form id="appointment-form" class="space-y-4 max-w-xl">
+    <div>
+      <label class="block mb-2">Nombre del cliente</label>
+      <input type="text" name="cliente_nombre" required class="w-full text-black p-2 rounded" />
+    </div>
+
+    <div>
+      <label class="block mb-2">Teléfono</label>
+      <input type="text" name="cliente_telefono" class="w-full text-black p-2 rounded" />
+    </div>
+
+    <div>
+      <label class="block mb-2">Empleado</label>
+      <select name="empleado_id" required class="w-full text-black p-2 rounded">
+        <option value="">Seleccionar</option>
+        <% empleados.forEach(empleado => { %>
+          <option value="<%= empleado.id %>"><%= empleado.name %></option>
+        <% }) %>
+      </select>
+    </div>
+
+    <div>
+      <label class="block mb-2">Fecha y hora</label>
+      <input type="datetime-local" name="fecha_hora" required class="w-full text-black p-2 rounded" />
+    </div>
+
+    <div>
+      <label class="block mb-2">Duración (minutos)</label>
+      <input type="number" name="duracion_minutos" value="30" min="15" step="15" class="w-full text-black p-2 rounded" />
+    </div>
+
+    <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded">Crear cita</button>
+  </form>
+
+  <div class="mt-8">
+    <div class="flex items-center justify-between mb-3">
+      <h2 class="text-xl font-semibold">Citas registradas</h2>
+      <button type="button" id="sync-now-btn" class="bg-purple-600 px-3 py-2 rounded text-sm">Sincronizar ahora</button>
+    </div>
+    <div id="sync-status" class="bg-gray-900 p-3 rounded mb-4 text-sm"></div>
+    <div class="text-xs text-gray-400 mb-4">La sincronización se procesa automáticamente cada 2 minutos y también puedes forzarla con el botón superior.</div>
+
+    <div id="daily-summary" class="bg-gray-800 p-3 rounded mb-4 text-sm"></div>
+    <div id="upcoming-summary" class="bg-gray-800 p-3 rounded mb-4 text-sm"></div>
+    <div id="employee-summary" class="bg-gray-800 p-3 rounded mb-4 text-sm"></div>
+    <div id="weekly-view" class="bg-gray-800 p-3 rounded mb-4 text-sm"></div>
+
+    <form method="GET" action="/citas" class="grid md:grid-cols-3 gap-3 mb-4">
+      <div>
+        <label class="block text-sm mb-1">Fecha</label>
+        <input type="date" name="fecha" value="<%= filtros?.fecha || '' %>" class="w-full text-black p-2 rounded" />
+      </div>
+      <div>
+        <label class="block text-sm mb-1">Empleado</label>
+        <select name="empleado_id" class="w-full text-black p-2 rounded">
+          <option value="">Todos</option>
+          <% empleados.forEach(empleado => { %>
+            <option value="<%= empleado.id %>" <%= filtros?.empleado_id == empleado.id ? 'selected' : '' %>><%= empleado.name %></option>
+          <% }) %>
+        </select>
+      </div>
+      <div class="flex items-end">
+        <button type="submit" class="bg-blue-600 px-3 py-2 rounded w-full">Filtrar</button>
+      </div>
+    </form>
+
+    <div class="space-y-2">
+      <% appointments.forEach(appointment => { %>
+        <div class="bg-gray-800 p-3 rounded flex flex-col gap-2">
+          <div>
+            <strong><%= appointment.cliente_nombre %></strong>
+            · <%= appointment.fecha_hora %>
+            · <%= (empleados.find(empleado => empleado.id === appointment.empleado_id) || {}).name || 'Empleado no encontrado' %>
+            · Estado: <%= appointment.estado %>
+          </div>
+          <div class="flex gap-2">
+            <button type="button" class="bg-blue-600 px-3 py-1 rounded" onclick="reprogramarCita(<%= appointment.id %>)">Reprogramar</button>
+            <button type="button" class="bg-red-600 px-3 py-1 rounded" onclick="cancelarCita(<%= appointment.id %>)">Cancelar</button>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  async function loadSyncStatus() {
+    const response = await fetch('/api/citas/sync-status');
+    const data = await response.json();
+    const statusEl = document.getElementById('sync-status');
+    if (statusEl) {
+      statusEl.innerHTML = `Pendientes locales: ${data.localPending} · Pendientes remotos: ${data.remotePending}`;
+    }
+  }
+
+  async function loadDailySummary() {
+    const fecha = document.querySelector('input[name="fecha"]')?.value || new Date().toISOString().slice(0, 10);
+    const response = await fetch(`/api/citas/resumen-diario?fecha=${encodeURIComponent(fecha)}`);
+    const data = await response.json();
+    const summaryEl = document.getElementById('daily-summary');
+    if (summaryEl) {
+      summaryEl.innerHTML = `Resumen del día ${data.fecha}: ${data.resumen.total} citas · ${data.resumen.canceladas} canceladas`;
+    }
+  }
+
+  async function loadUpcomingSummary() {
+    const response = await fetch('/api/citas/proximas?limit=5');
+    const data = await response.json();
+    const summaryEl = document.getElementById('upcoming-summary');
+    if (summaryEl) {
+      const items = (data.citas || []).map((cita) => `${cita.cliente_nombre} · ${cita.fecha_hora}`).join('<br>');
+      summaryEl.innerHTML = items ? `<strong>Próximas citas:</strong><br>${items}` : 'No hay citas próximas';
+    }
+  }
+
+  async function loadEmployeeSummary() {
+    const fecha = document.querySelector('input[name="fecha"]')?.value || '';
+    const response = await fetch(`/api/citas/resumen-empleados${fecha ? `?fecha=${encodeURIComponent(fecha)}` : ''}`);
+    const data = await response.json();
+    const summaryEl = document.getElementById('employee-summary');
+    if (summaryEl) {
+      const items = (data.resumen || []).map((item) => `${item.empleado_nombre || 'Sin empleado'}: ${item.total}`).join('<br>');
+      summaryEl.innerHTML = items ? `<strong>Resumen por empleado:</strong><br>${items}` : 'No hay citas para este filtro';
+    }
+  }
+
+  async function loadWeeklyView() {
+    const startDate = document.querySelector('input[name="fecha"]')?.value || new Date().toISOString().slice(0, 10);
+    const response = await fetch(`/api/citas/semana?start=${encodeURIComponent(startDate)}`);
+    const data = await response.json();
+    const viewEl = document.getElementById('weekly-view');
+    if (viewEl) {
+      const hours = [];
+      for (let hour = 8; hour <= 20; hour += 1) {
+        hours.push(`${String(hour).padStart(2, '0')}:00`);
+      }
+
+      const days = [];
+      for (let index = 0; index < 7; index += 1) {
+        const date = new Date(startDate);
+        date.setDate(date.getDate() + index);
+        const key = date.toISOString().slice(0, 10);
+        const items = (data.citas || []).filter((cita) => cita.fecha_hora.slice(0, 10) === key);
+        const htmlItems = hours.map((hour) => {
+          const matching = items.filter((cita) => cita.fecha_hora.slice(11, 13) === hour.slice(0, 2));
+          const content = matching.map((cita) => `<div class="bg-blue-700 text-xs p-1 rounded mb-1">${cita.fecha_hora.slice(11, 16)} · ${cita.cliente_nombre}</div>`).join('');
+          return `<div class="border-b border-gray-700 py-1 min-h-[28px]">${content || ''}</div>`;
+        }).join('');
+
+        days.push(`<div class="bg-gray-900 p-2 rounded"><strong>${key}</strong>${htmlItems}</div>`);
+      }
+
+      viewEl.innerHTML = `<strong>Agenda semanal:</strong><div class="grid md:grid-cols-7 gap-2 mt-2">${days.join('')}</div>`;
+    }
+  }
+
+  document.getElementById('sync-now-btn')?.addEventListener('click', async () => {
+    const button = document.getElementById('sync-now-btn');
+    if (button) {
+      button.disabled = true;
+      button.textContent = 'Sincronizando...';
+    }
+
+    try {
+      const response = await fetch('/api/citas/sync-now', { method: 'POST' });
+      const data = await response.json();
+      if (response.ok) {
+        alert(`Sincronización completada. Procesados: ${data.processed}`);
+      } else {
+        alert(data.error || 'No se pudo procesar la cola');
+      }
+    } catch (error) {
+      alert('No se pudo completar la sincronización');
+    } finally {
+      if (button) {
+        button.disabled = false;
+        button.textContent = 'Sincronizar ahora';
+      }
+      await loadSyncStatus();
+    }
+  });
+
+  document.getElementById('appointment-form')?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const form = event.target;
+    const payload = Object.fromEntries(new FormData(form));
+
+    const response = await fetch('/api/citas', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await response.json();
+    if (response.ok) {
+      alert('Cita creada correctamente');
+      form.reset();
+      window.location.reload();
+    } else {
+      alert(data.error || 'No se pudo crear la cita');
+    }
+  });
+
+  async function reprogramarCita(id) {
+    const nuevaFecha = prompt('Nueva fecha y hora (YYYY-MM-DD HH:mm:ss)');
+    if (!nuevaFecha) return;
+    const response = await fetch(`/api/citas/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fecha_hora: nuevaFecha })
+    });
+    const data = await response.json();
+    if (response.ok) {
+      alert('Cita reprogramada');
+      window.location.reload();
+    } else {
+      alert(data.error || 'No se pudo reprogramar');
+    }
+  }
+
+  async function cancelarCita(id) {
+    const response = await fetch(`/api/citas/${id}`, {
+      method: 'DELETE'
+    });
+    const data = await response.json();
+    if (response.ok) {
+      alert('Cita cancelada');
+      window.location.reload();
+    } else {
+      alert(data.error || 'No se pudo cancelar');
+    }
+  }
+
+  loadSyncStatus();
+  loadDailySummary();
+  loadUpcomingSummary();
+  loadEmployeeSummary();
+  loadWeeklyView();
+</script>

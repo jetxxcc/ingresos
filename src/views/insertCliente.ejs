@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Agregar Cliente</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        .form-container { max-width: 400px; margin: auto; padding: 20px; border: 1px solid #ccc; border-radius: 5px; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; }
+        .form-group input { width: 100%; padding: 8px; box-sizing: border-box; }
+        .form-group button { padding: 10px 15px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        .form-group button:hover { background-color: #0056b3; }
+        .back-link { display: block; margin-top: 20px; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <h2>Agregar Nuevo Cliente</h2>
+        <form action="/insertCliente" method="POST">
+            <div class="form-group">
+                <label for="nombre">Nombre:</label>
+                <input type="text" id="nombre" name="nombre" required>
+            </div>
+         
+            <div class="form-group">
+                <label for="direccion">Direccion:</label>
+                <input type="text" id="direccion" name="direccion">
+            </div>
+            <div class="form-group">
+                <button type="submit">Guardar Cliente</button>
+            </div>
+        </form>
+        <a href="/" class="back-link">Volver al Menú</a>
+    </div>
+</body>
+</html>

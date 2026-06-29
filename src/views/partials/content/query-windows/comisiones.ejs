@@ -1,0 +1,340 @@
+<!-- Ventana Principal - Comisiones -->
+<div class="main-father" id="main-window">
+    <div class="main-child">
+        <div class="container">
+            <div class="content-example" style="max-width: 100%; width: 100%;">
+                
+                
+                <div class="">
+                    <h1 class="text-2xl font-bold mb-4 flex items-center gap-2">
+                        Comisiones por Empleado
+                        <svg xmlns="http://www.w3.org/2000/svg" height="28px" viewBox="0 -960 960 960" width="28px" fill="#e3e3e3">
+                            <path d="M411-480q-28 0-46-21t-13-49l12-72q8-43 40.5-70.5T480-720q44 0 76.5 27.5T597-622l12 72q5 28-13 49t-46 21H411Zm24-80h91l-8-49q-2-14-13-22.5t-25-8.5q-14 0-24.5 8.5T443-609l-8 49ZM124-441q-23 1-39.5-9T63-481q-2-9-1-18t5-17q0 1-1-4-2-2-10-24-2-12 3-23t13-19l2-2q2-19 15.5-32t33.5-13q3 0 19 4l3-1q5-5 13-7.5t17-2.5q11 0 19.5 3.5T208-626q1 0 1.5.5t1.5.5q14 1 24.5 8.5T251-596q2 7 1.5 13.5T250-570q0 1 1 4 7 7 11 15.5t4 17.5q0 4-6 21-1 2 0 4l2 16q0 21-17.5 36T202-441h-78Zm676 1q-33 0-56.5-23.5T720-520q0-12 3.5-22.5T733-563l-28-25q-10-8-3.5-20t18.5-12h80q33 0 56.5 23.5T880-540v20q0 33-23.5 56.5T800-440ZM0-240v-63q0-44 44.5-70.5T160-400q13 0 25 .5t23 2.5q-14 20-21 43t-7 49v65H0Zm240 0v-65q0-65 66.5-105T480-450q108 0 174 40t66 105v65H240Zm560-160q72 0 116 26.5t44 70.5v63H780v-65q0-26-6.5-49T754-397q11-2 22.5-2.5t23.5-.5Zm-320 30q-57 0-102 15t-53 35h311q-9-20-53.5-35T480-370Zm0 50Zm1-280Z"/>
+                        </svg>
+                    </h1>
+
+                    <!-- Formulario de filtros -->
+                    <form method="GET" action="/comisiones" class="bg-gray-100 p-4 rounded-lg mb-4 flex flex-wrap gap-4 items-end">
+                        <div class="flex flex-col min-w-[150px] text-gray-700">
+                            <label class="font-bold  mb-1">Fecha inicio:</label>
+                            <input type="date" name="fechaInicio" value="<%= fechaInicio %>" 
+                                   class="p-2 border rounded">
+                        </div>
+                        
+                        <div class="flex flex-col min-w-[150px] text-gray-700">
+                            <label class="font-bold mb-1">Fecha fin:</label>
+                            <input type="date" name="fechaFin" value="<%= fechaFin %>" 
+                                   class="p-2 border rounded">
+                        </div>
+
+                        <div class="flex flex-col min-w-[150px] text-gray-700">
+                            <label class="font-bold  mb-1">Método de pago:</label>
+                            <select name="metodoPago" class="p-2 border rounded">
+                                <option value="todos" <%= metodoPago === 'todos' ? 'selected' : '' %>>Todos</option>
+                                <% metodosPago.forEach(metodo => { %>
+                                    <option value="<%= metodo.metodo_pago %>" 
+                                            <%= metodoPago === metodo.metodo_pago ? 'selected' : '' %>>
+                                        <%= metodo.metodo_pago %>
+                                    </option>
+                                <% }); %>
+                            </select>
+                        </div>
+                        
+                        <div class="flex flex-col min-w-[150px] text-gray-700">
+                            <label class="font-bold mb-1">Empleado:</label>
+                            <select name="empleado" class="p-2 border rounded">
+                                <option value="todos" <%= empleado === 'todos' ? 'selected' : '' %>>Todos</option>
+                                <% empleados.forEach(emp => { %>
+                                    <option value="<%= emp.employees_name %>" 
+                                            <%= empleado === emp.employees_name ? 'selected' : '' %>>
+                                        <%= emp.employees_name %>
+                                    </option>
+                                <% }); %>
+                            </select>
+                        </div>
+                        
+                        <div class="flex flex-col">
+                            <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                                Filtrar
+                            </button>
+                            <button type="button" onclick="limpiarFiltrosComisiones()" 
+                                    class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 mt-1">
+                                Limpiar
+                            </button>
+                        </div>
+
+                            <div class="flex flex-col text-gray-700">
+                                <label class="font-bold mb-1">🔍 Buscar en todos los campos:</label>
+                                <input type="text" name="buscar" value="<%= buscar %>" 
+                                       placeholder="Busca..." 
+                                       class="p-2 border rounded w-full">
+                            </div>
+
+                    </form>
+
+                    <!-- Resumen -->
+                    <% if (fechaInicio || fechaFin || (metodoPago && metodoPago !== 'todos') || (empleado && empleado !== 'todos')) { %>
+                        <div class="bg-blue-100 border-l-4 border-blue-500 p-4 mb-4 rounded filter-details-custom">
+                            <h3 class="text-lg font-bold text-blue-700 mb-2">📊 Resumen del Filtro</h3>
+                            <% if (is_admin) { %>
+                                <p class="mb-1">
+                                    <strong>Total comisiones:</strong> 
+                                    <u>
+										RD$<%= (totalMonto || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
+                                    </u>
+                                </p>
+                            <% } %>
+                            <p class="mb-1"><strong>Registros:</strong> <%= totalComisiones %> comisiones</p>
+                            <p><strong>Filtros:</strong> 
+                                <% 
+                                const filtros = [];
+                                if (fechaInicio) filtros.push('Desde: ' + fechaInicio);
+                                if (fechaFin) filtros.push('Hasta: ' + fechaFin);
+                                if (metodoPago && metodoPago !== 'todos') filtros.push('Método: ' + metodoPago);
+                                if (empleado && empleado !== 'todos') filtros.push('Empleado: ' + empleado);
+                                %>
+                                <%= filtros.join(' | ') %>
+                            </p>
+                        </div>
+                    <% } %>
+
+                    <% if (buscar && buscar.trim() !== '') { %>
+                        <div class="bg-yellow-100 border-l-4 border-yellow-500 p-4 mb-4 rounded filter-details-custom">
+                            <h3 class="text-lg font-bold text-yellow-700 mb-2">🔎 Resultados de búsqueda</h3>
+                            <p class="mb-1"><strong>Término:</strong> "<%= buscar %>"</p>
+                            <p class="mb-1"><strong>Registros encontrados:</strong> <%= totalComisiones %> comisiones</p>
+                            <p><strong>Campos buscados:</strong> ID Pedido, Producto, Empleado, Cliente, Fecha, Método, Vendedor</p>
+                        </div>
+                    <% } %>
+
+                    <!-- Selector de items por página -->
+                    <div class="text-right mb-2">
+                        <label class="mr-2">Items por página:</label>
+                        <select id="itemsPerPageComisiones" onchange="changeItemsPerPageComisiones(this.value)" 
+                                class="p-1 border rounded text-black">
+                            <option value="10" <%= limit === 10 ? 'selected' : '' %>>10</option>
+                            <option value="20" <%= limit === 20 ? 'selected' : '' %>>20</option>
+                            <option value="50" <%= limit === 50 ? 'selected' : '' %>>50</option>
+                            <option value="100" <%= limit === 100 ? 'selected' : '' %>>100</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Tabla -->
+                <div class="relative overflow-y-auto max-h-[490px] shadow-md rounded-lg border border-gray-200 custom-scroll">
+                    <table class="w-full text-sm text-left">
+                        <thead class="sticky top-0 text-xs text-gray-700 uppercase bg-gray-100 z-10">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 font-semibold">No. Pedido</th>
+                                <th scope="col" class="px-6 py-3 font-semibold">Fecha Pedido</th>
+                                <th scope="col" class="px-6 py-3 font-semibold">Pedido ID</th>
+                                <th scope="col" class="px-6 py-3 font-semibold">Producto</th>
+                                <th scope="col" class="px-6 py-3 font-semibold">Precio</th>
+                                <th scope="col" class="px-6 py-3 font-semibold">Encargado</th>
+                                <th scope="col" class="px-6 py-3 font-semibold">Cliente</th>
+                                <th scope="col" class="px-6 py-3 font-semibold">Método Pago</th>
+                                <th scope="col" class="px-6 py-3 font-semibold">Atendido por</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% if (comisiones && comisiones.length > 0) { %>
+                                <% comisiones.forEach(comision => { %>
+                                    <tr class="border-b hover:bg-gray-600">
+                                        <td class="p-2"><%= comision.pedido_id %></td>
+                                        <td class="p-2"><%= comision.fecha_pedido %></td>
+                                        <td class="p-2">
+                                            <button onclick="verPedidoCompleto(<%= comision.pedido_id %>)" 
+                                                    class="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 flex items-center gap-2">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3">
+                                                        <path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-480H200v480Zm280-80q-82 0-146.5-44.5T240-440q29-71 93.5-115.5T480-600q82 0 146.5 44.5T720-440q-29 71-93.5 115.5T480-280Zm0-60q56 0 102-26.5t72-73.5q-26-47-72-73.5T480-540q-56 0-102 26.5T306-440q26 47 72 73.5T480-340Zm0-100Zm0 60q25 0 42.5-17.5T540-440q0-25-17.5-42.5T480-500q-25 0-42.5 17.5T420-440q0 25 17.5 42.5T480-380Z"/>
+                                                    </svg>
+                                                    Ver Pedido
+                                            </button>
+                                        </td>
+                                        <td class="p-2"><%= comision.producto_nombre %></td>
+                                        <td class="p-2">$<%= comision.producto_precio.toFixed(2) %></td>
+                                        <td class="p-2"><strong><%= comision.employees_name || 'N/A' %></strong></td>
+                                        <td class="p-2"><%= comision.nombre_cliente %></td>
+                                        <td class="p-2"><%= comision.metodo_pago %></td>
+                                        <td class="p-2"><%= comision.vendedor %></td>
+                                    </tr>
+                                <% }); %>
+                            <% } else { %>
+                                <tr>
+                                    <td colspan="9" class="text-center text-gray-500 p-4">
+                                        No hay registros de comisiones para los filtros seleccionados.
+                                    </td>
+                                </tr>
+                            <% } %>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Paginación -->
+                <% if (totalPages > 1) { %>
+                    <div class="flex justify-center items-center flex-wrap gap-2 my-3">
+                        <% 
+                        const params = new URLSearchParams();
+                        if (fechaInicio) params.set('fechaInicio', fechaInicio);
+                        if (fechaFin) params.set('fechaFin', fechaFin);
+                        if (metodoPago && metodoPago !== 'todos') params.set('metodoPago', metodoPago);
+                        if (empleado && empleado !== 'todos') params.set('empleado', empleado);
+                        if (buscar) params.set('buscar', buscar);
+                        params.set('limit', limit);
+                        %>
+                        
+                        <% if (currentPage > 1) { %>
+                            <% params.set('page', currentPage - 1); %>
+                            <a href="/comisiones?<%= params.toString() %>" 
+                               class="px-3 py-2 text-black border rounded bg-white hover:bg-gray-100">← Anterior</a>
+                        <% } else { %>
+                            <span class="px-3 py-2 border rounded bg-gray-200 text-gray-500">← Anterior</span>
+                        <% } %>
+                        
+                        <% 
+                        let startPage = Math.max(1, currentPage - 2);
+                        let endPage = Math.min(totalPages, startPage + 4);
+                        if (endPage - startPage < 4) startPage = Math.max(1, endPage - 4);
+                        %>
+                       
+                        <% if (startPage > 1) { %>
+                            <% params.set('page', 1); %>
+                            <a href="/comisiones?<%= params.toString() %>" 
+                               class="px-3 py-2 text-black border rounded bg-white hover:bg-gray-100">1</a>
+                            <% if (startPage > 2) { %>
+                                <span class="px-3 py-2">...</span>
+                            <% } %>
+                        <% } %>
+
+                        <% for (let i = startPage; i <= endPage; i++) { %>
+                            <% if (i === currentPage) { %>
+                                <span class="px-3 py-2 text-black border rounded bg-blue-500 text-white"><%= i %></span>
+                            <% } else { %>
+                                <% params.set('page', i); %>
+                                <a href="/comisiones?<%= params.toString() %>" 
+                                   class="px-3 py-2 text-black border rounded bg-white hover:bg-gray-100"><%= i %></a>
+                            <% } %>
+                        <% } %>
+
+                        <% if (endPage < totalPages) { %>
+                            <% if (endPage < totalPages - 1) { %>
+                                <span class="px-3 py-2">...</span>
+                            <% } %>
+                            <% params.set('page', totalPages); %>
+                            <a href="/comisiones?<%= params.toString() %>" 
+                               class="px-3 py-2 text-black border rounded bg-white hover:bg-gray-100"><%= totalPages %></a>
+                        <% } %>
+                        
+                        <% if (currentPage < totalPages) { %>
+                            <% params.set('page', currentPage + 1); %>
+                            <a href="/comisiones?<%= params.toString() %>" 
+                               class="px-3 py-2 text-black border rounded bg-white hover:bg-gray-100">Siguiente →</a>
+                        <% } else { %>
+                            <span class="px-3 py-2 text-black border rounded bg-gray-200 text-gray-500">Siguiente →</span>
+                        <% } %>
+                        
+                        <span class="ml-4 text-gray-200">
+                            Mostrando <%= ((currentPage - 1) * limit) + 1 %> - 
+                            <%= Math.min(currentPage * limit, totalComisiones) %> de <%= totalComisiones %> registros
+                        </span>
+                    </div>
+                <% } %>
+            </div>
+        </div> 
+    </div>
+</div>
+
+
+
+<% if (showNoResultsModalComision) { %>
+<div id="modalSinResultados" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg p-6 w-full max-w-md">
+        <div class="text-center mb-4">
+            <div class="text-6xl mb-4">📭</div>
+            <h3 class="text-xl font-bold mb-2 text-gray-800">Sin Resultados</h3>
+            <p class="text-gray-600 mb-4">No se encontraron comisiones con los filtros seleccionados.</p>
+        </div>
+        
+        <!-- Mostrar filtros aplicados -->
+        <div class="bg-gray-100 rounded-lg p-4 mb-4 text-sm">
+            <p class="font-bold text-gray-700 mb-2">Filtros aplicados:</p>
+            <ul class="text-gray-600 space-y-1">
+                <% if (fechaInicio) { %>
+                    <li>📅 Desde: <strong><%= fechaInicio %></strong></li>
+                <% } %>
+                <% if (fechaFin) { %>
+                    <li>📅 Hasta: <strong><%= fechaFin %></strong></li>
+                <% } %>
+                <% if (metodoPago && metodoPago !== 'todos') { %>
+                    <li>💳 Método: <strong><%= metodoPago %></strong></li>
+                <% } %>
+                <% if (empleado && empleado !== 'todos') { %>
+                    <li>👤 Empleado: <strong><%= empleado %></strong></li>
+                <% } %>
+                <% if (buscar && buscar.trim() !== '') { %>
+                    <li>🔍 Búsqueda: <strong>"<%= buscar %>"</strong></li>
+                <% } %>
+            </ul>
+        </div>
+        
+        <div class="flex gap-2">
+            <button onclick="cerrarModalSinResultados()" 
+                    class="flex-1 bg-gray-500 text-white p-2 rounded hover:bg-gray-600">
+                Cerrar
+            </button>
+            <button onclick="limpiarFiltrosComisiones()" 
+                    class="flex-1 bg-blue-500 text-white p-2 rounded hover:bg-blue-600">
+                Limpiar Filtros
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Función para cerrar el modal
+    function cerrarModalSinResultados() {
+        document.getElementById('modalSinResultados').classList.add('hidden');
+    }
+    
+    // Cerrar con la tecla ESC
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            const modal = document.getElementById('modalSinResultados');
+            if (modal && !modal.classList.contains('hidden')) {
+                cerrarModalSinResultados();
+            }
+        }
+    });
+    
+    // Cerrar al hacer clic fuera del modal
+    document.getElementById('modalSinResultados').addEventListener('click', function(e) {
+        if (e.target === this) {
+            cerrarModalSinResultados();
+        }
+    });
+</script>
+<% } %>
+
+
+
+
+<script>
+
+
+function limpiarFiltrosComisiones() {
+    window.location.href = '/comisiones';
+}
+
+function verPedidoCompleto(pedidoId) {
+    window.location.href = `/consultar-pedidos?pedidoId=${pedidoId}`;
+}
+
+function changeItemsPerPageComisiones(limit) {
+    const url = new URL(window.location.href);
+    url.searchParams.set('limit', limit);
+    url.searchParams.set('page', 1);
+    window.location.href = url.toString();
+}
+
+
+</script>

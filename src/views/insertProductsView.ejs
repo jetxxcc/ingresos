@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Agregar</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+
+    .combo-container { margin-bottom: 20px; }
+
+    .combo-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    select {
+      padding: 5px;
+      font-size: 1rem;
+      width: 250px;
+    }
+
+    .enviar-btn {
+      margin-top: 20px;
+      background-color: green;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      cursor: pointer;
+    }
+
+
+    .modal {
+  display: none;
+  position: fixed;
+  z-index: 1;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0,0,0,0.4);
+}
+
+.modal-content {
+  background-color: #fefefe;
+  margin: 15% auto;
+  padding: 20px;
+  border: 1px solid #888;
+  width: 50%;
+}
+
+.modal-content-edition{
+  padding: 16px;
+}
+
+
+
+.close-modal {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.close-modal:hover {
+  color: black;
+}
+
+.input-error {
+  border: 2px solid red !important;
+}
+
+.error-message {
+  color: red;
+  font-size: 12px;
+  margin-top: 5px;
+}
+  </style>
+</head>
+<body>
+<h1>Agregar Pedido</h1>
+
+<form id="agregarForm">
+
+    <div>
+      <label>Cliente:</label>
+      <select id="clienteScript" name="cliente_id" required>
+        <option value="">--Seleccionar--</option>
+        <% clientes.forEach(c => { %>
+          <option value="<%= c.id %>"><%= c.nombre %></option>
+        <% }) %>
+      </select>
+    </div>
+
+    <div>
+      <label>Método de pago:</label>
+      <select id="metodoPagoScript" name="pago" required>
+        <option value="">--Seleccionar--</option>
+        <option value="Efectivo">Efectivo</option>
+        <option value="Tarjeta">Tarjeta</option>
+        <option value="Transferencia">Transferencia</option>
+      </select>
+    </div>
+
+    <div>
+      <label>Empleado encargado:</label>
+      <select id="empleadoScript" name="empleado_id" required>
+        <option value="">--Seleccionar--</option>
+        <% employees.forEach(e => { %>
+          <option value="<%= e.id %>"><%= e.name %></option>
+        <% }) %>
+      </select>
+    </div>
+
+  <div>
+    <label>Producto:</label>
+    <select name="producto"  id="productoSelect" required>
+      <option value="">--Seleccionar--</option>
+      <% opciones.forEach(op => { %>
+        <option value="<%= op.valor %>"><%= op.textWithPrice %></option>
+      <% }) %>
+    </select>
+  </div>
+
+  <button type="submit">Agregar</button>
+</form>
+
+
+<hr>
+<h2>Carrito</h2>
+<% if (pedidos.length > 0) { %>
+  <table border="1">
+    <tr>
+      <th>Producto</th>
+      <th>Precio</th>
+      <th>Método de pago</th>
+      <th>Cliente</th>
+      <th>Encargado</th>
+      <th>Acciones</th>
+    </tr>
+<% pedidos.forEach(p => { %>
+  <tr data-id="<%= p.id %>" data-producto="<%= p.producto_id %>" data-cliente="<%= p.cliente_id %>">
+    <td><%= p.producto %></td>
+    <td>$<%= p.precio.toFixed(2) %></td>
+    <td><%= p.metodo_pago %></td>
+    <td><%= p.cliente %></td>
+    <td><%= p.empleado_nombre || 'Sin asignar' %></td>
+    <td>
+      <form action="/EliminarPedido/<%= p.id %>" method="POST">
+        <button type="submit">🗑️</button>
+      </form>
+      <br>
+      <button class="edit-btn" data-id="<%= p.id %>">✏️</button>
+    </td>
+  </tr>
+<% }) %>
+    <tr>
+      <td colspan="5"><strong>Total: $<%= total.toFixed(2) %></strong></td>
+    </tr>
+  </table>
+
+<button id="enviarPedidoBtn">Enviar Pedido Final</button>
+
+<% } else { %>
+  <p>No hay pedidos en el carrito</p>
+<% } %>
+
+
+
+  <br>
+  <a href="/">Volver al menú</a>
+
+  <!-- modal de editar carrito -->
+
+<div id="editModal" class="modal" style="display:none;">
+  <div class="modal-content">
+    <span class="close-modal">&times;</span>
+    <h2>Editar Pedido</h2>
+    
+    <form id="editForm">
+      <input type="hidden" id="editPedidoId">
+      
+
+      <div class="modal-content-edition">
+        <label>Producto:</label>
+        <select id="editProducto" name="producto" required>
+          <option value="">--Seleccionar--</option>
+          <% opciones.forEach(op => { %>
+            <option value="<%= op.valor %>"><%= op.text %></option>
+          <% }) %>
+        </select>
+      </div>
+
+      <div class="modal-content-edition">
+        <label>Precio:</label>
+        <input type="number" id="editPrecio" name="precio" step="0.01" min="0" required>
+      </div>
+
+      <button type="submit">Guardar Cambios</button>
+      <button type="button" class="cancel-edit">Cancelar</button>
+    </form>
+  </div>
+</div>
+
+
+  <script>
+  // Verifica si ya hay productos en el carrito (EJS inyecta el dato)
+  let carritoLength = <%= pedidos.length %>;
+
+
+
+
+  // Variables globales
+let currentEditId = null;
+
+// Función para abrir el modal con los datos del pedido
+function openEditModal(pedidoId) {
+  currentEditId = pedidoId;
+  const modal = document.getElementById('editModal');
+  
+  fetch(`/ViewPedidoEdit/${pedidoId}`)
+    .then(response => response.json())
+    .then(pedido => {
+      document.getElementById('editPedidoId').value = pedido.id;
+      document.getElementById('editProducto').value = pedido.producto_id;
+      document.getElementById('editPrecio').value = pedido.precio;
+      
+      modal.style.display = 'block';
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert('Error al cargar los datos del pedido');
+    });
+}
+
+// Cerrar modal
+function closeEditModal() {
+  document.getElementById('editModal').style.display = 'none';
+  currentEditId = null;
+}
+
+  function bloquearSelects(bloquear) {
+    document.getElementById("clienteScript").disabled = bloquear;
+    document.getElementById("metodoPagoScript").disabled = bloquear;
+  }
+
+  // Bloquear al cargar si el carrito ya tiene productos
+  if (carritoLength > 0) {
+    bloquearSelects(true);
+  }
+
+  // Cuando el carrito esté vacío, desbloquear
+  function actualizarBloqueo() {
+    if (carritoLength > 0) {
+      bloquearSelects(true);
+    } else {
+      bloquearSelects(false);
+    }
+  }
+
+  // Manejar envío del formulario con AJAX
+document.getElementById('agregarForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  
+  const formData = {
+    producto: document.getElementById('productoSelect').value,
+    pago: document.querySelector('select[name="pago"]').value,
+    cliente_id: document.getElementById('clienteScript').value,
+    empleado_id: document.getElementById('empleadoScript').value
+  };
+
+  fetch('/Agregar', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(formData)
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.error) {
+      alert(data.error); // Mostrar alerta con el error
+    } else {
+          // Resetear solo el select de empleado
+    document.getElementById('empleadoScript').value = ''; //util cuando se hace el post actualiza la data empleado del combobox, mirar con los otros elementos
+      // Recargar la página para ver los cambios
+      location.reload();
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    alert('Error al agregar el producto');
+  });
+});
+
+// Manejar envío del pedido final
+document.getElementById('enviarPedidoBtn').addEventListener('click', function() {
+    if (!confirm('¿Estás seguro de que quieres enviar el pedido?')) {
+        return;
+    }
+
+    fetch('/EnviarPedidoFinal', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            alert('Error: ' + data.error);
+        } else {
+            alert(data.message || 'Pedido enviado correctamente');
+            // Recargar la página para ver los cambios
+            location.reload();
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error al enviar el pedido');
+    });
+});
+
+
+// Event listeners
+document.addEventListener('DOMContentLoaded', function() {
+  // Botones de edición
+  document.querySelectorAll('.edit-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const pedidoId = this.getAttribute('data-id');
+      openEditModal(pedidoId);
+    });
+  });
+
+  // Cerrar modal
+  document.querySelector('.close-modal').addEventListener('click', closeEditModal);
+  document.querySelector('.cancel-edit').addEventListener('click', closeEditModal);
+
+  // Enviar formulario de edición
+document.getElementById('editForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+  
+  const productoId = document.getElementById('editProducto').value;
+  const precio = document.getElementById('editPrecio').value;
+  
+  // Validación frontend de duplicados
+  const existeDuplicado = Array.from(document.querySelectorAll('tr[data-producto]')).some(row => {
+    const rowProductoId = row.getAttribute('data-producto');
+    const rowId = row.getAttribute('data-id');
+    
+    return rowProductoId === productoId && rowId !== currentEditId;
+  });
+  
+  if (existeDuplicado) {
+    alert('hola Este producto ya está en el carrito. Por favor elija otro producto.');
+    return;
+  }
+  
+  const formData = {
+    producto: productoId,
+    precio: precio
+  };
+
+  fetch(`/EditarPedido/${currentEditId}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(formData)
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.error) {
+      alert(data.error);
+    } else {
+      closeEditModal();
+      location.reload();
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    alert('Error al actualizar el pedido');
+  });
+});
+
+
+
+function mostrarError(campo, mensaje) {
+  campo.classList.add('input-error');
+  let errorElement = campo.nextElementSibling;
+  
+  if (!errorElement || !errorElement.classList.contains('error-message')) {
+    errorElement = document.createElement('div');
+    errorElement.className = 'error-message';
+    campo.parentNode.insertBefore(errorElement, campo.nextSibling);
+  }
+  
+  errorElement.textContent = mensaje;
+}
+
+function limpiarErrores() {
+  document.querySelectorAll('.input-error').forEach(el => {
+    el.classList.remove('input-error');
+  });
+  
+  document.querySelectorAll('.error-message').forEach(el => {
+    el.remove();
+  });
+}
+
+  // Cerrar modal al hacer clic fuera
+  window.addEventListener('click', function(event) {
+    const modal = document.getElementById('editModal');
+    if (event.target === modal) {
+      closeEditModal();
+    }
+  });
+
+
+
+
+  
+
+  // Mantener selección de cliente y método de pago si existen
+  <% if (clienteActual) { %>
+    document.getElementById('clienteScript').value = '<%= clienteActual %>';
+  <% } %>
+  
+  <% if (metodoActual) { %>
+    document.getElementById('metodoPagoScript').value = '<%= metodoActual %>';
+  <% } %>
+
+  <% if (empleadoActual) { %>
+    document.getElementById('empleadoScript').value = '<%= empleadoActual %>';
+<% } %>
+});
+</script>
+
+</body>
+</html>

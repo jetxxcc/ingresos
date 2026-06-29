@@ -1,0 +1,9 @@
+
+
+        .modal-backdrop { background-color: rgba(0, 0, 0, 0.5); }
+        [v-cloak] { display: none; }
+
+
+        .border-color-theme{
+            border-color: var(--line-clr);
+        }

@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+
+    <style>
+    .pagado {
+        background-color: #d4edda; /* Un verde claro */
+    }
+</style>
+
+</head>
+<body>
+
+<% if (fechaInicio || fechaFin) { %>
+    <div style="margin-top: 20px; font-size: 1.2em; font-weight: bold;">
+        Total de los pedidos filtrados: $<span id="totalFiltrado"><%= totalFiltrado.toFixed(2) %></span>
+    </div>
+<% } %>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Fecha</th>
+                <th>Método de pago</th>
+                <th>Cliente</th>
+                <th>Pedidos</th>
+                <th>Total</th>
+                <th>Nota</th>
+                <th>Usuario</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% if (pedidos && pedidos.length > 0) { %>
+                <% pedidos.forEach(function(pedido) { %>
+                    <tr class="<%= pedido.estado === 'Pagado' ? 'pagado' : '' %>">
+                        <td><%= pedido.fecha_pedido %></td>
+                        <td><%= pedido.metodo_pago %></td>
+                        <td><%= pedido.nombre_cliente %></td>
+                        <td>
+                            <button onclick="verDetalles(<%= pedido.pedido_id %>, `<%= pedido.nombre_cliente %>`,)">Ver Lista</button>
+                        </td>
+                        <td><%= pedido.total_pedido %></td>
+                        <!-- <td>
+                            <button onclick="editarNota(<%= pedido.pedido_id %>, '<%= pedido.nota %>')">
+                              <%= pedido.nota %>
+                            </button>
+                        </td> -->
+
+
+<td>
+    <% if (pedido.nota && pedido.nota.length > 0) { %>
+        <button onclick="abrirModalNota(<%= pedido.pedido_id %>, `<%= pedido.nombre_cliente %>`, `<%= pedido.nota %>`)">Ver nota</button>
+    <% } else { %>
+        <button onclick="abrirModalNota(<%= pedido.pedido_id %>, `<%= pedido.nombre_cliente %>`, '')">Vacío</button>
+    <% } %>
+</td>
+
+                        <td><%= pedido.usuario %></td>
+
+                             <td>
+                <span><%= pedido.estado %></span>
+                <button onclick="cambiarEstado(<%= pedido.pedido_id %>, '<%= pedido.estado %>')">
+                    <%= pedido.estado === 'Pagado' ? 'Marcar Pendiente' : 'Marcar Pagado' %>
+                </button>
+            </td>
+
+                        <td>
+                            <button onclick="editarPedido(
+                                  <%= pedido.pedido_id %>, 
+                                  '<%= pedido.fecha_pedido %>', 
+                                  '<%= pedido.metodo_pago %>', 
+                                  '<%= pedido.nombre_cliente %>'
+                                )">
+                                Editar
+                            </button>
+                        </td>
+                
+                    </tr>
+                <% }); %>
+            <% } else { %>
+                <tr>
+                    <td colspan="8">No hay pedidos disponibles.</td>
+                </tr>
+            <% } %>
+        </tbody>
+    </table>
+
+    <div id="modalDetalles" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background-color:rgba(0,0,0,0.5); justify-content:center; align-items:center;">
+    <div style="background:white; padding:20px; border-radius:5px; width:600px;">
+        <h3>Detalles del Pedido <span id="modalPedidoId"></span></h3>
+        <table id="tablaDetalles" style="width:100%; margin-bottom:20px;">
+            <thead>
+                <tr>
+                    <th>Producto</th>
+                    <th>Precio</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                </tbody>
+        </table>
+        <button onclick="document.getElementById('modalDetalles').style.display='none'">Cerrar</button>
+    </div>
+</div>
+
+<div id="modalNota" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background-color:rgba(0,0,0,0.5); justify-content:center; align-items:center;">
+    <div style="background:white; padding:20px; border-radius:5px; width:400px;">
+        <h3>Nota del Pedido <span id="modalNotaPedidoId"></span></h3>
+        <textarea id="notaTextarea" style="width:100%; height:150px; margin-bottom:10px;"></textarea>
+        <button onclick="guardarNota()">Guardar Nota</button>
+        <button onclick="document.getElementById('modalNota').style.display='none'">Cerrar</button>
+    </div>
+</div>
+
+<div style="margin-bottom: 20px;">
+    <form action="/view" method="GET">
+        <label for="fechaInicio">Fecha de inicio:</label>
+        <input type="date" id="fechaInicio" name="fechaInicio" value="<%= fechaInicio %>">
+
+        <label for="fechaFin" style="margin-left: 10px;">Fecha de fin:</label>
+        <input type="date" id="fechaFin" name="fechaFin" value="<%= fechaFin %>">
+
+        <button type="submit" style="margin-left: 10px;">Filtrar</button>
+        <a href="/view" style="margin-left: 10px;">Limpiar Filtro</a>
+    </form>
+</div>
+
+
+
+
+      <a href="/">⬅️ Volver al menú</a>
+
+    <script>
+
+     
+
+
+
+async function verDetalles(pedidoId, nombreCliente) {
+    try {
+        const response = await fetch(`/api/pedidos/detalles/${pedidoId}`);
+        if (!response.ok) throw new Error('Error al obtener los detalles.');
+        const detalles = await response.json();
+
+        const tablaBody = document.getElementById('tablaDetalles').getElementsByTagName('tbody')[0];
+        tablaBody.innerHTML = ''; // Limpiar la tabla antes de rellenarla
+        
+        detalles.forEach(detalle => {
+            const row = tablaBody.insertRow();
+            row.innerHTML = `
+                <td>${detalle.producto_nombre}</td>
+                <td>${detalle.producto_precio}</td>
+                <td>
+                    <button onclick="editarDetalle(${detalle.id}, '${detalle.producto_nombre}', ${detalle.producto_precio})">
+                        Editar
+                    </button>
+                </td>
+            `;
+        });
+
+        // document.getElementById('modalPedidoId').textContent = pedidoId;
+        document.getElementById('modalPedidoId').textContent = nombreCliente;
+        document.getElementById('modalDetalles').style.display = 'flex';
+
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error al obtener los detalles del pedido.');
+    }
+}
+
+let idPedidoActual;
+
+
+function abrirModalNota(pedidoId, nombreCliente, notaActual) {
+    idPedidoActual = pedidoId;
+    // document.getElementById('modalNotaPedidoId').textContent = pedidoId;
+    document.getElementById('modalNotaPedidoId').textContent = nombreCliente;
+    document.getElementById('notaTextarea').value = notaActual;
+    document.getElementById('modalNota').style.display = 'flex';
+}
+
+async function guardarNota() {
+    const nuevaNota = document.getElementById('notaTextarea').value;
+
+    if (nuevaNota === null) {
+        // No hacemos nada si el usuario cancela (aunque en este caso no aplica con el modal)
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/pedidos/editar/nota', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 
+                id: idPedidoActual, 
+                nota: nuevaNota 
+            }),
+        });
+
+        if (!response.ok) {
+            throw new Error('Error al actualizar la nota.');
+        }
+
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('Nota actualizada correctamente!');
+            window.location.reload(); 
+        } else {
+            alert('Hubo un problema al actualizar la nota.');
+        }
+
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error al enviar la solicitud: ' + error.message);
+    }
+}
+
+async function editarDetalle(detalleId, nombreActual, precioActual) {
+    const nuevoNombre = prompt("Ingresa el nuevo nombre del producto:", nombreActual);
+    if (nuevoNombre === null) return;
+    
+    const nuevoPrecio = prompt("Ingresa el nuevo precio:", precioActual);
+    if (nuevoPrecio === null || isNaN(parseFloat(nuevoPrecio))) {
+        alert("El precio ingresado no es válido.");
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/pedidos/editar/detalle', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                id: detalleId, 
+                nombre: nuevoNombre, 
+                precio: parseFloat(nuevoPrecio)
+            }),
+        });
+        
+        if (!response.ok) throw new Error('Error al actualizar el detalle.');
+        const result = await response.json();
+
+        if (result.success) {
+            alert('Detalle de pedido actualizado correctamente!');
+            // Recargamos la vista para que el total se actualice
+            window.location.reload(); 
+        } else {
+            alert('Hubo un problema al actualizar el detalle.');
+        }
+
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error al enviar la solicitud: ' + error.message);
+    }
+}
+
+
+async function editarNota(pedidoId, notaActual) {
+    // Le pide al usuario que ingrese la nueva nota, con la nota actual como valor por defecto
+    const nuevaNota = prompt("Ingresa la nueva nota:", notaActual);
+
+    // Si el usuario presiona "Cancelar" o deja el campo vacío, no hacemos nada
+    if (nuevaNota === null || nuevaNota === notaActual) {
+        return;
+    }
+
+    try {
+        // Hacemos una petición POST al servidor para actualizar la nota
+        const response = await fetch('/api/pedidos/editar/nota', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 
+                id: pedidoId, 
+                nota: nuevaNota 
+            }),
+        });
+
+        if (!response.ok) {
+            throw new Error('Error al actualizar la nota.');
+        }
+
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('Nota actualizada correctamente!');
+            // Opcional: recargar la página para ver los cambios
+            window.location.reload(); 
+        } else {
+            alert('Hubo un problema al actualizar la nota.');
+        }
+
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error al enviar la solicitud: ' + error.message);
+    }
+}
+
+
+async function editarPedido(pedidoId, fechaActual, metodoActual, clienteActual) {
+    const nuevaFecha = prompt("Ingresa la nueva fecha:", fechaActual);
+    if (nuevaFecha === null) return; // El usuario canceló
+
+    const nuevoMetodo = prompt("Ingresa el nuevo método de pago:", metodoActual);
+    if (nuevoMetodo === null) return; // El usuario canceló
+
+    const nuevoCliente = prompt("Ingresa el nuevo cliente:", clienteActual);
+    if (nuevoCliente === null) return; // El usuario canceló
+
+    try {
+        const response = await fetch('/api/pedidos/editar/datos', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 
+                id: pedidoId, 
+                fecha: nuevaFecha, 
+                metodo_pago: nuevoMetodo, 
+                cliente: nuevoCliente 
+            }),
+        });
+
+        if (!response.ok) {
+            throw new Error('Error al actualizar los datos del pedido.');
+        }
+
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('Pedido actualizado correctamente!');
+            window.location.reload(); 
+        } else {
+            alert('Hubo un problema al actualizar el pedido.');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error al enviar la solicitud: ' + error.message);
+    }
+}
+
+
+async function cambiarEstado(pedidoId, estadoActual) {
+    const nuevoEstado = estadoActual === 'Pagado' ? 'Pendiente' : 'Pagado';
+    
+    if (confirm(`¿Estás seguro de que quieres cambiar el estado a "${nuevoEstado}"?`)) {
+        try {
+            const response = await fetch('/api/pedidos/cambiar/estado', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ id: pedidoId, estado: nuevoEstado }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Error al cambiar el estado del pedido.');
+            }
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                alert('Estado actualizado correctamente.');
+                window.location.reload(); // Recargar la página para ver el cambio
+            } else {
+                alert('Hubo un problema al actualizar el estado.');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Error al enviar la solicitud: ' + error.message);
+        }
+    }
+}
+
+
+</script>
+
+</body>
+</html>

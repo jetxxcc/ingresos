@@ -1,0 +1,355 @@
+<div class="content-example">
+    <h1 class="text-2xl font-bold mb-4 flex items-center gap-2">
+        Carrito
+    <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3">
+        <path d="M280-80q-33 0-56.5-23.5T200-160q0-33 23.5-56.5T280-240q33 0 56.5 23.5T360-160q0 33-23.5 56.5T280-80Zm400 0q-33 0-56.5-23.5T600-160q0-33 23.5-56.5T680-240q33 0 56.5 23.5T760-160q0 33-23.5 56.5T680-80ZM246-720l96 200h280l110-200H246Zm-38-80h590q23 0 35 20.5t1 41.5L692-482q-11 20-29.5 31T622-440H324l-44 80h480v80H280q-45 0-68-39.5t-2-78.5l54-98-144-304H40v-80h130l38 80Zm134 280h280-280Z"/>
+    </svg>
+    </h1>
+    
+    <div id="carrito-container">
+        <% if (pedidos.length > 0) { %>
+            <div class="relative overflow-y-auto max-h-[681px] shadow-md rounded-lg border border-gray-200 custom-scroll">
+                <table class="w-full text-sm text-left" id="tabla-carrito">
+                    <thead class="sticky top-0 text-xs text-gray-700 uppercase bg-gray-100 z-10">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 font-semibold">Producto</th>
+                            <th scope="col" class="px-6 py-3 font-semibold">Precio</th>
+                            <th scope="col" class="px-6 py-3 font-semibold">Método de pago</th>
+                            <th scope="col" class="px-6 py-3 font-semibold">Cliente</th>
+                            <th scope="col" class="px-6 py-3 font-semibold">Encargado</th>
+                            <th scope="col" class="px-6 py-3 font-semibold">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="carrito-tbody">
+                        <% pedidos.forEach(p => { %>
+                            <tr data-id="<%= p.id %>" data-producto="<%= p.producto_id %>" data-cliente="<%= p.cliente_id %>" class="border-b hover:bg-gray-600">
+                                <td class="p-1"><%= p.producto %></td>
+                                <td class="p-1">$<%= p.precio.toFixed(2) %></td>
+                                <td class="p-1"><%= p.metodo_pago %></td>
+                                <td class="p-1"><%= p.cliente_nombre %> <%= p.cliente_apellido %> </td>
+                                <td class="p-1"><%= p.empleado_nombre || 'Sin asignar' %></td>
+                                <td class="p-1">
+                                    <button data-id="<%= p.id %>"
+                                         class="edit-btn icons-custom-color hover:text-blue-600 mt-2" >
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
+                                    </button>
+                                    <button onclick="eliminarPedido(<%= p.id %>)" 
+                                        class="icons-custom-color hover:text-red-600 mt-2 ml-4">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                                    </button>
+                                </td>
+                            </tr>
+                        <% }) %>
+                        <tr id="total-row">
+                            <td colspan="5" class="border p-2 text-right text-lg font-bold">
+                                Total: $<%= total.toFixed(2) %>
+                            </td>
+                            <td class="border p-2"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <button id="enviarPedidoBtn" class="mt-4 w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600">
+                Enviar Pedido Final
+            </button>
+        <% } else { %>
+            <p class="text-gray-500" id="carrito-vacio">No hay pedidos en el carrito</p>
+        <% } %>
+    </div>
+</div>
+
+<!-- Modal de edición -->
+<div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-lg p-6 w-full max-w-md">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl text-black font-bold">Editar Pedido</h3>
+        </div>
+        
+        <form id="editForm">
+            <input type="hidden" id="editPedidoId">
+            
+            <div class="mb-4">
+                <label class="block mb-2 text-black">Producto:</label>
+                <select id="editProducto" name="producto" required 
+                class="w-full p-2 border border-black text-black rounded">
+                    <option value="">--Seleccionar--</option>
+                    <% opciones.forEach(op => { %>
+                        <option value="<%= op.valor %>"><%= op.text %></option>
+                    <% }) %>
+                </select>
+            </div>
+
+            <div class="mb-4">
+                <label class="block mb-2 text-black">Precio:</label>
+                <input type="number" id="editPrecio" name="precio" step="0.01" min="0" required 
+                       class="w-full p-2 border border-black text-black rounded">
+            </div>
+
+            <div class="flex gap-2">
+                <button type="button" class="cancel-edit flex-1 bg-gray-500 text-white p-2 rounded hover:bg-gray-600">
+                    Cancelar
+                </button>
+                <button type="submit" class="flex-1 bg-green-500 text-white p-2 rounded hover:bg-green-600">
+                    Guardar Cambios
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+let currentEditId = null;
+
+// Función para renderizar el carrito completo
+function renderizarCarrito(data) {
+    const container = document.getElementById('carrito-container');
+    
+    if (data.pedidos.length === 0) {
+        container.innerHTML = '<p class="text-gray-500" id="carrito-vacio">No hay pedidos en el carrito</p>';
+        return;
+    }
+    
+    let html = `
+       <div class="relative overflow-y-auto max-h-[681px] shadow-md rounded-lg border border-gray-200 custom-scroll">
+                <table class="w-full text-sm text-left" id="tabla-carrito">
+                    <thead class="sticky top-0 text-xs text-gray-700 uppercase bg-gray-100 z-10">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 font-semibold">Producto</th>
+                            <th scope="col" class="px-6 py-3 font-semibold">Precio</th>
+                            <th scope="col" class="px-6 py-3 font-semibold">Método de pago</th>
+                            <th scope="col" class="px-6 py-3 font-semibold">Cliente</th>
+                            <th scope="col" class="px-6 py-3 font-semibold">Encargado</th>
+                            <th scope="col" class="px-6 py-3 font-semibold">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="carrito-tbody">
+    `;
+    
+    data.pedidos.forEach(p => {
+        html += `
+            <tr data-id="${p.id}" data-producto="${p.producto_id}" data-cliente="${p.cliente_id}" class="border-b hover:bg-gray-600">
+                <td class="p-1">${p.producto}</td>
+                <td class="p-1">$${p.precio.toFixed(2)}</td>
+                <td class="p-1">${p.metodo_pago}</td>
+                <td class="p-1">${p.cliente_nombre || ''} ${p.cliente_apellido || ''}</td>
+                <td class="p-1">${p.empleado_nombre || 'Sin asignar'}</td>
+                <td class="p-1">
+                    <button data-id="${p.id}"
+                      class="edit-btn icons-custom-color hover:text-blue-600 mt-2" >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
+                    </button>
+                    <button onclick="eliminarPedido(${p.id})" 
+                       class="icons-custom-color hover:text-red-600 mt-2 ml-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
+    
+    html += `
+                        <tr id="total-row">
+                            <td colspan="5" class="border p-2 text-right font-bold">
+                                Total: $${data.total.toFixed(2)}
+                            </td>
+                            <td class="border p-2"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <button id="enviarPedidoBtn" class="mt-4 w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600">
+                Enviar Pedido Final
+            </button>
+    `;
+    
+    container.innerHTML = html;
+    
+    // Re-adjuntar eventos
+    adjuntarEventosCarrito();
+}
+
+// Función para adjuntar eventos después de renderizar
+function adjuntarEventosCarrito() {
+    // Botones de edición
+    document.querySelectorAll('.edit-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const pedidoId = this.getAttribute('data-id');
+            openEditModal(pedidoId);
+        });
+    });
+    
+    // Botón enviar pedido
+    const enviarBtn = document.getElementById('enviarPedidoBtn');
+    if (enviarBtn) {
+        enviarBtn.addEventListener('click', enviarPedidoFinal);
+    }
+}
+
+// Función para eliminar pedido
+function eliminarPedido(id) {
+    if (!confirm('¿Estás seguro de eliminar este producto?')) return;
+    
+    fetch(`/EliminarPedido/${id}`, {
+        method: 'POST'
+    })
+    .then(() => {
+        // Actualizar carrito sin recargar
+        fetch('/api/obtener-carrito')
+            .then(response => response.json())
+            .then(data => {
+                renderizarCarrito(data);
+                window.dispatchEvent(new CustomEvent('carritoActualizado', { detail: data }));
+            });
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error al eliminar el producto');
+    });
+}
+
+// Abrir modal de edición
+function openEditModal(pedidoId) {
+    currentEditId = pedidoId;
+    const modal = document.getElementById('editModal');
+    
+    fetch(`/ViewPedidoEdit/${pedidoId}`)
+        .then(response => response.json())
+        .then(pedido => {
+            document.getElementById('editPedidoId').value = pedido.id;
+            document.getElementById('editProducto').value = pedido.producto_id;
+            document.getElementById('editPrecio').value = pedido.precio;
+            
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al cargar los datos del pedido');
+        });
+}
+
+// Cerrar modal
+function closeEditModal() {
+    const modal = document.getElementById('editModal');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    currentEditId = null;
+}
+
+// Enviar pedido final
+function enviarPedidoFinal() {
+    if (!confirm('¿Estás seguro de que quieres enviar el pedido?')) return;
+
+    fetch('/EnviarPedidoFinal', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            alert('Error: ' + data.error);
+        } else {
+            alert(data.message || 'Pedido enviado correctamente');
+            // Actualizar sin recargar
+            fetch('/api/obtener-carrito')
+                .then(response => response.json())
+                .then(data => {
+                    renderizarCarrito(data);
+                    window.dispatchEvent(new CustomEvent('carritoActualizado', { detail: data }));
+                });
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error al enviar el pedido');
+    });
+}
+
+// Event listeners iniciales
+document.addEventListener('DOMContentLoaded', function() {
+    adjuntarEventosCarrito();
+    
+    // Cerrar modal
+    const closeBtn = document.querySelector('.close-modal');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closeEditModal);
+    }
+    
+    const cancelBtn = document.querySelector('.cancel-edit');
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', closeEditModal);
+    }
+
+    // Enviar formulario de edición
+    const editForm = document.getElementById('editForm');
+    if (editForm) {
+        editForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const productoId = document.getElementById('editProducto').value;
+            const precio = document.getElementById('editPrecio').value;
+            
+            // Validación de duplicados
+            const existeDuplicado = Array.from(document.querySelectorAll('tr[data-producto]')).some(row => {
+                const rowProductoId = row.getAttribute('data-producto');
+                const rowId = row.getAttribute('data-id');
+                return rowProductoId === productoId && rowId !== currentEditId;
+            });
+            
+            if (existeDuplicado) {
+                alert('Este producto ya está en el carrito. Por favor elija otro producto.');
+                return;
+            }
+            
+            const formData = {
+                producto: productoId,
+                precio: precio
+            };
+
+            fetch(`/EditarPedido/${currentEditId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert(data.error);
+                } else {
+                    closeEditModal();
+                    // Actualizar sin recargar
+                    fetch('/api/obtener-carrito')
+                        .then(response => response.json())
+                        .then(data => {
+                            renderizarCarrito(data);
+                            window.dispatchEvent(new CustomEvent('carritoActualizado', { detail: data }));
+                        });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error al actualizar el pedido');
+            });
+        });
+    }
+
+    // Cerrar modal al hacer clic fuera
+    window.addEventListener('click', function(event) {
+        const modal = document.getElementById('editModal');
+        if (event.target === modal) {
+            closeEditModal();
+        }
+    });
+});
+
+// Escuchar evento de actualización desde la ventana izquierda
+window.addEventListener('carritoActualizado', function(e) {
+    renderizarCarrito(e.detail);
+});
+</script>

@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Administrar Productos</title>
+  <style>
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 30px;
+    }
+    th, td {
+      padding: 10px;
+      border: 1px solid #ccc;
+      text-align: left;
+    }
+    h2 {
+      margin-top: 40px;
+    }
+
+      .modal {
+    position: fixed;
+    z-index: 999;
+    left: 0; top: 0;
+    width: 100%; height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.4);
+  }
+  .modal-content {
+    background-color: #fff;
+    margin: 10% auto;
+    padding: 20px;
+    border-radius: 10px;
+    width: 300px;
+    text-align: center;
+  }
+  </style>
+</head>
+<body>
+
+<h1>Administrar Productos</h1>
+
+<form action="/AdministrarProductos" method="POST">
+  <input type="text" name="seccion" placeholder="Nueva Sección" required>
+  <button type="submit">Crear Sección</button>
+</form>
+<br>
+  ⬅️<a href="/">Volver al menú</a>
+  <br>
+<hr>
+
+<% secciones.forEach(seccion => { %>
+<h2>
+  <%= seccion.nombre %>
+  <button type="button" onclick="abrirModalEdicion('seccion', <%= seccion.id %>, '<%= seccion.nombre %>')">📝</button>
+  <form action="/AdministrarProductos/eliminarSeccion/<%= seccion.id %>" method="POST" onsubmit="return confirm('¿Eliminar esta sección?')" style="display:inline;">
+    <button type="submit">🗑</button>
+  </form>
+  
+
+  <button onclick="abrirModalProducto(<%= seccion.id %>)">➕ Agregar Producto</button>
+
+</h2>
+
+
+
+  <!-- Tabla de productos -->
+  <table border="1">
+    <tr>
+      <th>Producto</th>
+      <th>Precio</th>
+      <th>Acciones</th>
+    </tr>
+    <% seccion.productos.forEach(prod => { %>
+      <tr>
+        <td><%= prod.nombre %></td>
+        <td>$<%= prod.precio %></td>
+          <td>
+            <button type="button" onclick="abrirModalEdicion('producto', <%= prod.id %>, '<%= prod.nombre %>', <%= prod.precio %>)">📝</button>
+            <form action="/AdministrarProductos/eliminarProducto/<%= prod.id %>" method="POST" onsubmit="return confirm('¿Eliminar este producto?')" style="display:inline;">
+              <button type="submit">🗑</button>
+            </form>
+          </td>
+      </tr>
+    <% }); %>
+  </table>
+
+  <!-- Agregar producto -->
+
+  <hr>
+<% }); %>
+
+
+<!-- Modal para editar -->
+<div id="modal-edicion" class="modal" style="display:none;">
+  <div class="modal-content">
+    <h3 id="modal-titulo">Editar</h3>
+    <form id="modal-form" method="POST">
+      <input type="text" id="modal-nombre" name="nombre" required>
+      <input type="number" step="0.01" id="modal-precio" name="precio" style="display: none;">
+      <br><br>
+      <button type="submit">Guardar</button>
+      <button type="button" onclick="cerrarModal()">Cancelar</button>
+    </form>
+  </div>
+</div>
+
+<!-- Modal para agregar producto -->
+<div id="modalProducto" class="modal" style="display:none;">
+  <div class="modal-content">
+    <h3>Agregar Producto</h3>
+    <form action="/AdministrarProductos/agregar" method="POST">
+      <input type="hidden" name="seccion_id" id="inputSeccionId">
+      <label>Nombre:</label>
+      <input type="text" name="producto" required>
+      <br>
+      <label>Precio:</label>
+      <input type="number" step="0.01" name="precio" required>
+      <br><br>
+      <button type="submit">Guardar</button>
+       <button type="button" onclick="cerrarModalProducto()">Cancelar</button>
+    </form>
+  </div>
+</div>
+
+
+
+
+
+
+  <script>
+function abrirModalEdicion(tipo, id, nombre, precio = null) {
+  const modal = document.getElementById('modal-edicion');
+  const form = document.getElementById('modal-form');
+  const nombreInput = document.getElementById('modal-nombre');
+  const precioInput = document.getElementById('modal-precio');
+  const titulo = document.getElementById('modal-titulo');
+
+  nombreInput.value = nombre;
+  form.action = tipo === 'producto'
+    ? `/AdministrarProductos/editarProducto/${id}`
+    : `/AdministrarProductos/editarSeccion/${id}`;
+
+  titulo.innerText = tipo === 'producto' ? 'Editar Producto' : 'Editar Sección';
+
+  if (tipo === 'producto') {
+    precioInput.style.display = 'inline';
+    precioInput.value = precio;
+  } else {
+    precioInput.style.display = 'none';
+  }
+
+  modal.style.display = 'block';
+}
+
+function cerrarModal() {
+  document.getElementById('modal-edicion').style.display = 'none';
+}
+
+
+function abrirModalProducto(seccionId) {
+  document.getElementById('modalProducto').style.display = 'block';
+  document.getElementById('inputSeccionId').value = seccionId;
+}
+
+function cerrarModalProducto() {
+  document.getElementById('modalProducto').style.display = 'none';
+}
+</script>
+</body>
+</html>

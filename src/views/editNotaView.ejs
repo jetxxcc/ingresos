@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Editar Nota</title>
+</head>
+<body>
+  <h2>Editar Nota del Pedido</h2>
+  <form action="/editarPedido/<%= pedido.id %>" method="POST">
+    <textarea name="nota" rows="4" cols="50" required><%= pedido.nota %></textarea><br><br>
+    <button type="submit">Guardar Nota</button>
+  </form>
+  <br>
+  <a href="/view">Volver a la lista</a>
+</body>
+</html>

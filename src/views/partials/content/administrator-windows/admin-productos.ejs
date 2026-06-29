@@ -1,0 +1,546 @@
+<!-- Ventana Principal -->
+<div class="main-father" id="main-window">
+    <div class="main-child">
+        <div class="container">
+            <div class="content-example">
+
+<div class="text-gray-800 antialiased" v-cloak>
+
+    <div id="app" class="flex h-[85vh]">
+        <!-- Barra Lateral de Secciones -->
+        <aside class="w-1/4 max-w-xs border-r border-color-theme flex flex-col">
+            <div class="p-4 border-b border-color-theme">
+                <h2 class="text-lg font-semibold text-white">Secciones</h2>
+                <div class="flex items-center gap-2">
+                    <p class="text-base text-white">Administra tus productos</p>
+                        <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3">
+                            <path d="M200-640v440h560v-440H640v320l-160-80-160 80v-320H200Zm0 520q-33 0-56.5-23.5T120-200v-499q0-14 4.5-27t13.5-24l50-61q11-14 27.5-21.5T250-840h460q18 0 34.5 7.5T772-811l50 61q9 11 13.5 24t4.5 27v499q0 33-23.5 56.5T760-120H200Zm16-600h528l-34-40H250l-34 40Zm184 80v190l80-40 80 40v-190H400Zm-200 0h560-560Z"/>
+                        </svg>
+                </div>
+            </div>
+            <nav id="sections-list" class="flex-1 overflow-y-auto p-2 space-y-1">
+                <!-- Las secciones se renderizarán aquí -->
+            </nav>
+            <div class="p-4 border-t border-color-theme">
+                <button id="add-section-btn" class="w-full flex items-center justify-center gap-2 bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    Nueva Sección
+                </button>
+            </div>
+        </aside>
+
+        <!-- Contenido Principal -->
+        <main id="main-content" class="flex-1 p-6 lg:p-8 overflow-y-auto">
+            <!-- El contenido dinámico se mostrará aquí -->
+        </main>
+    </div>
+
+    <!-- Plantilla: Estado Inicial (sin sección seleccionada) -->
+    <template id="initial-state-template">
+        <div class="flex flex-col items-center justify-center h-full text-center">
+            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-gray-300 mb-4"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+            <h3 class="text-xl font-semibold text-white">Bienvenido al Administrador de Productos</h3>
+            <p class="text-white mt-1">Selecciona una sección para ver sus productos o crea una nueva para empezar.</p>
+        </div>
+    </template>
+    
+    <!-- Plantilla: Vista de Sección y Productos -->
+    <template id="section-view-template">
+        <div class="space-y-6">
+            <div class="flex items-center justify-between">
+                <div id="section-header" class="flex items-center gap-3">
+                    <h1 class="text-3xl font-bold text-white"></h1>
+                    <button class="edit-section-name-btn text-white hover:text-blue-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
+                    </button>
+                    <button class="delete-section-btn text-white hover:text-red-600">
+                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                    </button>
+                </div>
+                <button id="add-product-btn" class="flex items-center justify-center gap-2 bg-green-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-green-700 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    Añadir Producto
+                </button>
+            </div>
+            <div class="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-50 text-gray-500 uppercase text-xs">
+                            <tr>
+                                <th class="px-6 py-3 text-left font-medium">Producto</th>
+                                <th class="px-6 py-3 text-right font-medium">Precio</th>
+                                <th class="px-6 py-3 text-center font-medium">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="products-table-body" class="divide-y divide-gray-200">
+                            <!-- Filas de productos se renderizarán aquí -->
+                        </tbody>
+                    </table>
+                </div>
+                 <div id="no-products-message" class="hidden text-center p-8 text-gray-500">
+                    <p>Aún no hay productos en esta sección.</p>
+                    <p class="text-sm">¡Haz clic en "Añadir Producto" para empezar!</p>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- Modal para crear/editar Sección -->
+    <div id="section-modal" class="fixed inset-0 z-50 items-center justify-center hidden modal-backdrop">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md m-4">
+            <form id="section-form" class="p-6 space-y-4">
+                <h3 id="section-modal-title" class="text-xl font-semibold"></h3>
+                <input type="hidden" id="section-id-input">
+                <div>
+                    <label for="section-name" class="block text-sm font-medium text-gray-700 mb-1">Nombre de la Sección</label>
+                    <input type="text" id="section-name-input" class="w-full border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2" required>
+                </div>
+                <div class="flex justify-end gap-3 pt-4">
+                    <button type="button" id="cancel-section-modal" class="bg-gray-200 text-gray-700 font-semibold py-2 px-4 rounded-lg hover:bg-gray-300">Cancelar</button>
+                    <button type="submit" class="bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal para crear/editar Producto -->
+    <div id="product-modal" class="fixed inset-0 z-50 items-center justify-center hidden modal-backdrop">
+         <div class="bg-white rounded-lg shadow-xl w-full max-w-md m-4">
+            <form id="product-form" class="p-6 space-y-4">
+                <h3 id="product-modal-title" class="text-xl font-semibold"></h3>
+                <input type="hidden" id="product-id-input">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label for="product-name" class="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
+                        <input type="text" id="product-name-input" class="w-full border border-gray-300 rounded-lg p-2" required>
+                    </div>
+                    <div>
+                        <label for="product-price" class="block text-sm font-medium text-gray-700 mb-1">Precio</label>
+                        <input type="number" id="product-price-input" min="0" step="0.01" class="w-full border border-gray-300 rounded-lg p-2" required>
+                    </div>
+                </div>
+                <div class="flex justify-end gap-3 pt-4">
+                    <button type="button" id="cancel-product-modal" class="bg-gray-200 text-gray-700 font-semibold py-2 px-4 rounded-lg hover:bg-gray-300">Cancelar</button>
+                    <button type="submit" class="bg-green-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-green-700">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Modal de Confirmación para Eliminar -->
+    <div id="confirm-modal" class="fixed inset-0 z-50 items-center justify-center hidden modal-backdrop">
+         <div class="bg-white rounded-lg shadow-xl w-full max-w-sm m-4 p-6 text-center">
+            <h3 id="confirm-modal-title" class="text-xl font-semibold mb-2"></h3>
+            <p id="confirm-modal-text" class="text-gray-600 mb-6"></p>
+            <div class="flex justify-center gap-4">
+                 <button id="cancel-confirm-modal" class="bg-gray-200 text-gray-700 font-semibold py-2 px-6 rounded-lg hover:bg-gray-300">Cancelar</button>
+                 <button id="confirm-delete-btn" class="bg-red-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-red-700">Eliminar</button>
+            </div>
+         </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const app = document.getElementById('app');
+            app.parentElement.removeAttribute('v-cloak');
+
+            // --- ELEMENTOS DEL DOM ---
+            const sectionsList = document.getElementById('sections-list');
+            const mainContent = document.getElementById('main-content');
+            const addSectionBtn = document.getElementById('add-section-btn');
+
+            // Modales
+            const sectionModal = document.getElementById('section-modal');
+            const productModal = document.getElementById('product-modal');
+            const confirmModal = document.getElementById('confirm-modal');
+
+            // Formularios
+            const sectionForm = document.getElementById('section-form');
+            const productForm = document.getElementById('product-form');
+
+            // --- ESTADO DE LA APLICACIÓN ---
+            let state = {
+                sections: [],
+                activeSectionId: null,
+                editingSectionId: null,
+                editingProductId: null,
+                sectionToDeleteId: null,
+                productToDeleteId: null,
+            };
+
+            // --- FUNCIONES DE API ---
+            async function cargarSecciones() {
+                try {
+                    const response = await fetch('/api/obtener-secciones');
+                    const data = await response.json();
+                    state.sections = data.secciones;
+                    render();
+                } catch (error) {
+                    console.error('Error cargando secciones:', error);
+                    alert('Error al cargar las secciones');
+                }
+            }
+
+            async function crearSeccion(nombre) {
+                try {
+                    const response = await fetch('/AdministrarProductos', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ seccion: nombre })
+                    });
+                    const data = await response.json();
+                    if (data.error) {
+                        alert(data.error);
+                        return false;
+                    }
+                    await cargarSecciones();
+                    return true;
+                } catch (error) {
+                    console.error('Error creando sección:', error);
+                    alert('Error al crear la sección');
+                    return false;
+                }
+            }
+
+            async function editarSeccion(id, nombre) {
+                try {
+                    const response = await fetch(`/AdministrarProductos/editarSeccion/${id}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ nombre })
+                    });
+                    const data = await response.json();
+                    if (data.error) {
+                        alert(data.error);
+                        return false;
+                    }
+                    await cargarSecciones();
+                    return true;
+                } catch (error) {
+                    console.error('Error editando sección:', error);
+                    alert('Error al editar la sección');
+                    return false;
+                }
+            }
+
+            async function eliminarSeccion(id) {
+                try {
+                    const response = await fetch(`/AdministrarProductos/eliminarSeccion/${id}`, {
+                        method: 'POST'
+                    });
+                    const data = await response.json();
+                    if (data.error) {
+                        alert(data.error);
+                        return false;
+                    }
+                    await cargarSecciones();
+                    return true;
+                } catch (error) {
+                    console.error('Error eliminando sección:', error);
+                    alert('Error al eliminar la sección');
+                    return false;
+                }
+            }
+
+            async function agregarProducto(seccionId, nombre, precio) {
+                try {
+                    const response = await fetch('/AdministrarProductos/agregar', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            seccion_id: seccionId,
+                            producto: nombre,
+                            precio: parseFloat(precio)
+                        })
+                    });
+                    const data = await response.json();
+                    if (data.error) {
+                        alert(data.error);
+                        return false;
+                    }
+                    await cargarSecciones();
+                    return true;
+                } catch (error) {
+                    console.error('Error agregando producto:', error);
+                    alert('Error al agregar el producto');
+                    return false;
+                }
+            }
+
+            async function editarProducto(id, nombre, precio) {
+                try {
+                    const response = await fetch(`/AdministrarProductos/editarProducto/${id}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            nombre,
+                            precio: parseFloat(precio)
+                        })
+                    });
+                    const data = await response.json();
+                    if (data.error) {
+                        alert(data.error);
+                        return false;
+                    }
+                    await cargarSecciones();
+                    return true;
+                } catch (error) {
+                    console.error('Error editando producto:', error);
+                    alert('Error al editar el producto');
+                    return false;
+                }
+            }
+
+            async function eliminarProducto(id) {
+                try {
+                    const response = await fetch(`/AdministrarProductos/eliminarProducto/${id}`, {
+                        method: 'POST'
+                    });
+                    const data = await response.json();
+                    if (data.error) {
+                        alert(data.error);
+                        return false;
+                    }
+                    await cargarSecciones();
+                    return true;
+                } catch (error) {
+                    console.error('Error eliminando producto:', error);
+                    alert('Error al eliminar el producto');
+                    return false;
+                }
+            }
+
+            // --- LÓGICA DE RENDERIZADO ---
+            
+            function render() {
+                renderSectionsList();
+                renderMainContent();
+            }
+
+            function renderSectionsList() {
+                sectionsList.innerHTML = '';
+                if (state.sections.length === 0) {
+                    sectionsList.innerHTML = `<p class="p-4 text-sm text-center text-gray-500">No hay secciones. ¡Crea una para empezar!</p>`;
+                    return;
+                }
+                state.sections.forEach(section => {
+                    const isActive = section.id === state.activeSectionId;
+                    const sectionEl = document.createElement('a');
+                    sectionEl.href = '#';
+                    sectionEl.dataset.id = section.id;
+                    sectionEl.className = `block px-4 py-2 text-base font-medium rounded-md transition-colors ${isActive ? 'bg-blue-100 text-blue-700' : 'text-white hover:bg-gray-600'}`;
+                    sectionEl.textContent = section.nombre;
+                    sectionEl.onclick = (e) => {
+                        e.preventDefault();
+                        state.activeSectionId = section.id;
+                        render();
+                    };
+                    sectionsList.appendChild(sectionEl);
+                });
+            }
+
+            function renderMainContent() {
+                mainContent.innerHTML = '';
+                if (state.activeSectionId === null) {
+                    const template = document.getElementById('initial-state-template');
+                    mainContent.appendChild(template.content.cloneNode(true));
+                    return;
+                }
+
+                const activeSection = state.sections.find(s => s.id === state.activeSectionId);
+                if (!activeSection) {
+                    state.activeSectionId = null;
+                    render();
+                    return;
+                }
+
+                const template = document.getElementById('section-view-template');
+                const view = template.content.cloneNode(true);
+                
+                view.querySelector('#section-header h1').textContent = activeSection.nombre;
+                
+                const tableBody = view.getElementById('products-table-body');
+                const noProductsMsg = view.getElementById('no-products-message');
+                tableBody.innerHTML = '';
+
+                if(!activeSection.productos || activeSection.productos.length === 0) {
+                    noProductsMsg.classList.remove('hidden');
+                } else {
+                     noProductsMsg.classList.add('hidden');
+                     activeSection.productos.forEach(product => {
+                        const tr = document.createElement('tr');
+                        tr.className = 'hover:bg-gray-50';
+                        tr.innerHTML = `
+                            <td class="px-6 py-4 whitespace-nowrap"><div class="font-medium text-gray-900">${product.nombre}</div></td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-gray-500">$${parseFloat(product.precio).toFixed(2)}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center">
+                                <div class="flex items-center justify-center gap-4">
+
+                                    <button data-id="${product.id}" 
+                                    class="edit-product-btn text-gray-500 hover:text-blue-600">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
+                                    </button>
+                                    <button data-id="${product.id}" 
+                                    class="delete-product-btn text-gray-500 hover:text-red-600">
+                                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                                    </button>
+                                </div>
+                            </td>
+                        `;
+                        tableBody.appendChild(tr);
+                    });
+                }
+                mainContent.appendChild(view);
+            }
+
+            // --- MANEJO DE MODALES ---
+            function openSectionModal(id = null) {
+                state.editingSectionId = id;
+                sectionForm.reset();
+                document.getElementById('section-id-input').value = id || '';
+                if (id) {
+                    const section = state.sections.find(s => s.id === id);
+                    document.getElementById('section-modal-title').textContent = "Editar Sección";
+                    document.getElementById('section-name-input').value = section.nombre;
+                } else {
+                    document.getElementById('section-modal-title').textContent = "Crear Nueva Sección";
+                }
+                sectionModal.classList.remove('hidden');
+                sectionModal.classList.add('flex');
+            }
+
+            function closeSectionModal() {
+                sectionModal.classList.add('hidden');
+                sectionModal.classList.remove('flex');
+                state.editingSectionId = null;
+            }
+
+            function openProductModal(id = null) {
+                state.editingProductId = id;
+                productForm.reset();
+                 document.getElementById('product-id-input').value = id || '';
+                if (id) {
+                    const section = state.sections.find(s => s.id === state.activeSectionId);
+                    const product = section.productos.find(p => p.id === id);
+                    document.getElementById('product-modal-title').textContent = 'Editar Producto';
+                    document.getElementById('product-name-input').value = product.nombre;
+                    document.getElementById('product-price-input').value = product.precio;
+                } else {
+                    document.getElementById('product-modal-title').textContent = 'Añadir Nuevo Producto';
+                }
+                productModal.classList.remove('hidden');
+                productModal.classList.add('flex');
+            }
+
+            function closeProductModal() {
+                 productModal.classList.add('hidden');
+                 productModal.classList.remove('flex');
+                 state.editingProductId = null;
+            }
+
+            function openConfirmModal(type, id) {
+                const title = document.getElementById('confirm-modal-title');
+                const text = document.getElementById('confirm-modal-text');
+                if (type === 'section') {
+                    state.sectionToDeleteId = id;
+                    const section = state.sections.find(s => s.id === id);
+                    title.textContent = `¿Eliminar "${section.nombre}"?`;
+                    text.textContent = `Esta acción es irreversible. Se eliminarán también los ${section.productos ? section.productos.length : 0} productos que contiene.`;
+                } else {
+                    state.productToDeleteId = id;
+                    const section = state.sections.find(s => s.id === state.activeSectionId);
+                    const product = section.productos.find(p => p.id === id);
+                    title.textContent = `¿Eliminar "${product.nombre}"?`;
+                    text.textContent = 'Este producto se eliminará permanentemente de la sección.';
+                }
+                confirmModal.classList.remove('hidden');
+                confirmModal.classList.add('flex');
+            }
+            
+            function closeConfirmModal() {
+                confirmModal.classList.add('hidden');
+                confirmModal.classList.remove('flex');
+                state.productToDeleteId = null;
+                state.sectionToDeleteId = null;
+            }
+
+            // --- LÓGICA DE EVENTOS Y MANIPULACIÓN DEL ESTADO ---
+            
+            addSectionBtn.onclick = () => openSectionModal();
+            
+            sectionForm.onsubmit = async (e) => {
+                e.preventDefault();
+                const name = document.getElementById('section-name-input').value.trim();
+                if (!name) return;
+
+                if (state.editingSectionId) {
+                    if (await editarSeccion(state.editingSectionId, name)) {
+                        closeSectionModal();
+                    }
+                } else {
+                    if (await crearSeccion(name)) {
+                        closeSectionModal();
+                    }
+                }
+            };
+
+            productForm.onsubmit = async (e) => {
+                e.preventDefault();
+                const name = document.getElementById('product-name-input').value;
+                const price = parseFloat(document.getElementById('product-price-input').value);
+
+                if (state.editingProductId) {
+                    if (await editarProducto(state.editingProductId, name, price)) {
+                        closeProductModal();
+                    }
+                } else {
+                    if (await agregarProducto(state.activeSectionId, name, price)) {
+                        closeProductModal();
+                    }
+                }
+            };
+
+            document.getElementById('confirm-delete-btn').onclick = async () => {
+                if (state.sectionToDeleteId) {
+                    if (await eliminarSeccion(state.sectionToDeleteId)) {
+                        if (state.activeSectionId === state.sectionToDeleteId) {
+                            state.activeSectionId = null;
+                        }
+                        closeConfirmModal();
+                    }
+                } else if (state.productToDeleteId) {
+                    if (await eliminarProducto(state.productToDeleteId)) {
+                        closeConfirmModal();
+                    }
+                }
+            };
+            
+            mainContent.addEventListener('click', (e) => {
+                const addProductBtn = e.target.closest('#add-product-btn');
+                const editSectionBtn = e.target.closest('.edit-section-name-btn');
+                const deleteSectionBtn = e.target.closest('.delete-section-btn');
+                const editProductBtn = e.target.closest('.edit-product-btn');
+                const deleteProductBtn = e.target.closest('.delete-product-btn');
+
+                if (addProductBtn) openProductModal();
+                if (editSectionBtn) openSectionModal(state.activeSectionId);
+                if (deleteSectionBtn) openConfirmModal('section', state.activeSectionId);
+                if (editProductBtn) openProductModal(Number(editProductBtn.dataset.id));
+                if (deleteProductBtn) openConfirmModal('product', Number(deleteProductBtn.dataset.id));
+            });
+
+            // Cerrar modales
+            document.getElementById('cancel-section-modal').onclick = closeSectionModal;
+            document.getElementById('cancel-product-modal').onclick = closeProductModal;
+            document.getElementById('cancel-confirm-modal').onclick = closeConfirmModal;
+
+            // --- INICIALIZACIÓN ---
+            cargarSecciones();
+        });
+    </script>
+</div>
+                           
+                    </div>
+                </div> 
+            </div>
+        </div>

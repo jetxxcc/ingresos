@@ -1,0 +1,772 @@
+<!-- Ventana Principal - Consultar Pedidos -->
+<div class="main-father" id="main-window">
+    <div class="main-child">
+        <div class="container">
+            <div class="content-example" style="max-width: 100%; width: 100%;">
+                
+                <!-- Header Sticky -->
+               
+                    <h1 class="text-2xl font-bold mb-4 flex items-center gap-2">
+                         Consultar Pedidos
+                         <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3">
+                            <path d="M760-200v-120H200v120h560Zm0-200v-160H200v160h560Zm0-240v-120H200v120h560ZM200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Z"/>
+                        </svg>
+                    </h1>
+
+                    <!-- Formulario de filtros -->
+                    <form id="filterForm" class="bg-gray-100 p-4 rounded-lg mb-4 flex flex-wrap gap-4 items-end">
+                        <div class="flex flex-col min-w-[150px] text-gray-700">
+                            <label class="font-bold mb-1">Fecha inicio:</label>
+                            <input type="date" name="fechaInicio" value="<%= fechaInicio %>" 
+                                   class="p-2 border rounded">
+                        </div>
+                        
+                        <div class="flex flex-col min-w-[150px] text-gray-700">
+                            <label class="font-bold mb-1">Fecha fin:</label>
+                            <input type="date" name="fechaFin" value="<%= fechaFin %>" 
+                                   class="p-2 border rounded">
+                        </div>
+                        
+                        <div class="flex flex-col min-w-[150px] text-gray-700">
+                            <label class="font-bold  mb-1">Método de pago:</label>
+                            <select name="metodoPago" class="p-2 border rounded">
+                                <option value="todos" <%= metodoPago === 'todos' ? 'selected' : '' %>>Todos</option>
+                                <% metodosPago.forEach(metodo => { %>
+                                    <option value="<%= metodo.metodo_pago %>" 
+                                            <%= metodoPago === metodo.metodo_pago ? 'selected' : '' %>>
+                                        <%= metodo.metodo_pago %>
+                                    </option>
+                                <% }); %>
+                            </select>
+                        </div>
+
+                        <div class="flex flex-col min-w-[150px] text-gray-700">
+                            <label class="font-bold mb-1">Estado:</label>
+                            <select name="estado" class="p-2 border rounded">
+                                <option value="todos" <%= estado === 'todos' ? 'selected' : '' %>>Todos</option>
+                                <option value="Pagado" <%= estado === 'Pagado' ? 'selected' : '' %>>Pagado</option>
+                               <option value="Pendiente" <%= estado && estado.trim().toLowerCase() === 'pendiente' ? 'selected' : '' %>>Pendiente</option>
+                            </select>
+                        </div>
+
+                        <div class="flex flex-col min-w-[150px] text-gray-700">
+                            <label class="font-bold mb-1">Nota:</label>
+                            <select name="tieneNota" class="p-2 border rounded">
+                                <option value="todos" <%= tieneNota === 'todos' ? 'selected' : '' %>>Todas</option>
+                                <option value="conNota" <%= tieneNota === 'conNota' ? 'selected' : '' %>>Con Nota 📝</option>
+                                <option value="sinNota" <%= tieneNota === 'sinNota' ? 'selected' : '' %>>Sin Nota 💬</option>
+                            </select>
+                        </div>
+                        
+                        <div class="flex flex-col">
+                            <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                                Filtrar
+                            </button>
+                            <button type="button" onclick="limpiarFiltros()" 
+                                    class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 mt-1">
+                                Limpiar
+                            </button>
+                        </div>
+
+
+                        <div class="flex flex-col text-gray-700">
+                            <label class="font-bold mb-1">🔍 Buscar en todos los campos:</label>
+                            <input type="text" name="buscar" value="<%= buscar %>" 
+                                   placeholder="Busca..." 
+                                   class="p-2 border rounded w-full">
+                        </div>
+                        
+                    </form>
+
+                    <!-- Resumen -->
+                    <% if (fechaInicio || fechaFin || (metodoPago && metodoPago !== 'todos') || (estado && estado !== 'todos') || (tieneNota && tieneNota !== 'todos')) { %>
+                        <div class="bg-blue-100 border-l-4 border-blue-500 p-4 mb-4 rounded filter-details-custom">
+                            <h3 class="text-lg font-bold text-blue-700 mb-2">📊 Resumen del Filtro</h3>
+                                    <% if (is_admin) { %>
+                                        <p class="mb-1">
+                                            <strong>Total filtrado:</strong> 
+                                            <u>
+                                                RD$<%= (totalFiltrado || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
+                                            </u>
+                                        </p>
+                                    <% } %>
+                                    <p class="mb-1"><strong>Registros:</strong> <%= totalPedidos %> pedidos</p>
+                                    <p>
+                                        <strong>Filtros:</strong>
+                                        <% 
+                                        const filtros = [];
+                                        if (fechaInicio) filtros.push('Desde: ' + fechaInicio);
+                                        if (fechaFin) filtros.push('Hasta: ' + fechaFin);
+                                        if (metodoPago && metodoPago !== 'todos') filtros.push('Método: ' + metodoPago);
+                                        if (estado && estado !== 'todos') filtros.push('Estado: ' + estado);
+                                        if (tieneNota && tieneNota !== 'todos') {
+                                            if (tieneNota === 'conNota') filtros.push('Con Nota');
+                                            else if (tieneNota === 'sinNota') filtros.push('Sin Nota');
+                                        }
+                                        %>
+                                        <%= filtros.join(' | ') %>
+                                        
+                                    </p>  
+                        </div>
+                    <% } %>
+
+                                        <!-- Mostrar indicador cuando hay búsqueda activa -->
+                                        <% if (buscar && buscar.trim() !== '') { %>
+                                            <div class="bg-yellow-100 border-l-4 border-yellow-500 p-4 mb-4 rounded filter-details-custom">
+                                                <h3 class="text-lg font-bold text-yellow-700 mb-2">🔎 Resultados de búsqueda</h3>
+                                                <p class="mb-1"><strong>Término:</strong> "<%= buscar %>"</p>
+                                                <p class="mb-1"><strong>Registros encontrados:</strong> <%= totalPedidos %> pedidos</p>
+                                                <p><strong>Campos buscados:</strong> ID, Fecha, Método, Cliente, Total, Nota, Usuario, Estado</p>
+                                            </div>
+                                        <% } %>
+
+                    <!-- Selector de items por página -->
+                    <div class="text-right mb-2">
+                        <label class="mr-2">Items por página:</label>
+                        <select id="itemsPerPage" onchange="changeItemsPerPage(this.value)" 
+                                class="p-1 border rounded text-black">
+                            <option value="10" <%= limit === 10 ? 'selected' : '' %>>10</option>
+                            <option value="20" <%= limit === 20 ? 'selected' : '' %>>20</option>
+                            <option value="50" <%= limit === 50 ? 'selected' : '' %>>50</option>
+                            <option value="100" <%= limit === 100 ? 'selected' : '' %>>100</option>
+                        </select>
+                    </div>
+               
+
+                <!-- Tabla de pedidos (contenido scrolleable) -->
+                <div class="relative overflow-y-auto max-h-[490px] shadow-md rounded-lg border border-gray-200 custom-scroll">
+                    <table class="w-full text-sm text-left" id="tabla-pedidos">
+                        <thead class="sticky top-0 text-xs text-gray-700 uppercase bg-gray-100 z-10">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 font-semibold">No. Pedido</th>
+                                <th scope="col" class="px-6 py-3 font-semibold">Fecha</th>
+                                <th scope="col" class="px-6 py-3 font-semibold">Método</th>
+                                <th scope="col" class="px-6 py-3 font-semibold">Cliente</th>
+                                <th scope="col" class="px-6 py-3 font-semibold">Atendido por</th>
+                                <th scope="col" class="px-6 py-3 font-semibold">Nota</th>
+                                <th scope="col" class="px-6 py-3 font-semibold">Estado</th>
+                                <th scope="col" class="px-6 py-3 font-semibold">Pedidos</th>
+                                <% if (is_admin) { %>
+                                    <th scope="col" class="px-6 py-3 font-semibold">Total</th>
+                                <% } %>
+                                <th scope="col" class="px-6 py-3 font-semibold">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-pedidos-body">
+                            <% if (pedidos && pedidos.length > 0) { %>
+                                <% pedidos.forEach(pedido => { %>
+                                    <tr class="border-b hover:bg-gray-600 <%= pedido.estado === 'Pagado' ? 'border-b bg-green-400' : '' %>" 
+                                        data-pedido-id="<%= pedido.pedido_id %>">
+                                        <td class="p-1"><%= pedido.pedido_id %></td>
+                                        <td class="p-1"><%= pedido.fecha_pedido %></td>
+                                        <td class="p-1"><%= pedido.metodo_pago %></td>
+                                        <td class="p-1"><%= pedido.nombre_cliente %></td>
+                                        <td class="p-1"><%= pedido.usuario %></td>
+                                        <td class="p-1">
+                                            <button onclick="abrirModalNota(<%= pedido.pedido_id %>, '<%= pedido.nombre_cliente.replace(/'/g, "\\'") %>', '<%= (pedido.nota || '').replace(/'/g, "\\'").replace(/\n/g, '\\n') %>')" 
+                                                class="px-3 py-1">
+                                                <% if (pedido.nota && pedido.nota.trim() !== '') { %>
+                                                  <!-- Si HAY nota, muestra este texto -->
+                                                   <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#fff">
+                                                        <path d="M240-400h320v-80H240v80Zm0-120h480v-80H240v80Zm0-120h480v-80H240v80ZM80-80v-720q0-33 23.5-56.5T160-880h640q33 0 56.5 23.5T880-800v480q0 33-23.5 56.5T800-240H240L80-80Zm126-240h594v-480H160v525l46-45Zm-46 0v-480 480Z"/>
+                                                    </svg>
+                                                <% } else { %>
+                                                    <!-- Si NO hay nota, muestra el ícono SVG -->
+                                                    <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#909094">
+                                                        <path d="M320-520q17 0 28.5-11.5T360-560q0-17-11.5-28.5T320-600q-17 0-28.5 11.5T280-560q0 17 11.5 28.5T320-520Zm160 0q17 0 28.5-11.5T520-560q0-17-11.5-28.5T480-600q-17 0-28.5 11.5T440-560q0 17 11.5 28.5T480-520Zm160 0q17 0 28.5-11.5T680-560q0-17-11.5-28.5T640-600q-17 0-28.5 11.5T600-560q0 17 11.5 28.5T640-520ZM80-80v-720q0-33 23.5-56.5T160-880h640q33 0 56.5 23.5T880-800v480q0 33-23.5 56.5T800-240H240L80-80Zm126-240h594v-480H160v525l46-45Zm-46 0v-480 480Z"/>
+                                                    </svg>
+                                                <% } %>
+                                            </button>
+                                        </td>
+                                        <td class="p-1">
+                                            <span class="block mb-1"><%= pedido.estado %></span>
+                                            <button onclick="cambiarEstado(<%= pedido.pedido_id %>, '<%= pedido.estado %>')" 
+                                                class="bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600 text-sm">
+                                                <%= pedido.estado === 'Pagado' ? 'Marcar Pendiente' : 'Marcar Pagado' %>
+                                            </button>
+                                        </td>
+                                        <td class="p-1">
+                                            <button onclick="verDetalles(<%= pedido.pedido_id %>, '<%= pedido.nombre_cliente.replace(/'/g, "\\'") %>')" 
+                                                    class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 flex items-center gap-2">
+                                                Ver Lista 
+                                                <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#fff">
+                                                    <path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v333q-19-11-39-20t-41-16v-137H520v137q-46 14-86 40t-74 63H200v160h82q11 22 22 42t24 38H200Zm0-320h240v-160H200v160Zm0-240h560v-80H200v80Zm280 200Zm0 0Zm0 0Zm0 0ZM640-40q-91 0-168-48T360-220q35-84 112-132t168-48q91 0 168 48t112 132q-35 84-112 132T640-40Zm0-80q57 0 107.5-26t82.5-74q-32-48-82.5-74T640-320q-57 0-107.5 26T450-220q32 48 82.5 74T640-120Zm0-40q-25 0-42.5-17.5T580-220q0-25 17.5-42.5T640-280q25 0 42.5 17.5T700-220q0 25-17.5 42.5T640-160Z"/>
+                                                </svg>
+                                            </button>
+                                        </td>
+                                        <% if (is_admin) { %>
+                                            <td class="p-1">RD $<%= pedido.total_pedido %></td>
+                                        <% } %>
+                                        <td class="p-1">
+                                            <button onclick="editarPedido(<%= pedido.pedido_id %>, '<%= pedido.fecha_pedido %>', '<%= pedido.metodo_pago %>', '<%= pedido.nombre_cliente.replace(/'/g, "\\'") %>')" 
+                                                    class="icons-custom-color hover:text-blue-600 mt-2" >
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
+                                            </button>
+                                            <button onclick="eliminarPedido(<%= pedido.pedido_id %>)" 
+                                                   class="icons-custom-color hover:text-red-600 mt-2 ml-4">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                                            </button>
+                                            <a href="/descargar/pedido/<%= pedido.pedido_id %>">
+                                                <button 
+                                                class="icons-custom-color hover:text-green-600 mt-2 ml-4">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor"><path d="M360-460h40v-80h40q17 0 28.5-11.5T480-580v-40q0-17-11.5-28.5T440-660h-80v200Zm40-120v-40h40v40h-40Zm120 120h80q17 0 28.5-11.5T640-500v-120q0-17-11.5-28.5T600-660h-80v200Zm40-40v-120h40v120h-40Zm120 40h40v-80h40v-40h-40v-40h40v-40h-80v200ZM320-240q-33 0-56.5-23.5T240-320v-480q0-33 23.5-56.5T320-880h480q33 0 56.5 23.5T880-800v480q0 33-23.5 56.5T800-240H320Zm0-80h480v-480H320v480ZM160-80q-33 0-56.5-23.5T80-160v-560h80v560h560v80H160Zm160-720v480-480Z"/></svg>
+                                                </button>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                <% }); %>
+                            <% } else { %>
+                                <tr>
+                                    <td colspan="<%= is_admin ? '10' : '9' %>" class="text-center text-gray-500 p-4">
+                                        No hay pedidos disponibles.
+                                    </td>
+                                </tr>
+                            <% } %>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Paginación -->
+                <% if (totalPages > 1) { %>
+                    <div class="flex justify-center items-center flex-wrap gap-2 my-3">
+                        <% 
+                        const params = new URLSearchParams();
+                        if (fechaInicio) params.set('fechaInicio', fechaInicio);
+                        if (fechaFin) params.set('fechaFin', fechaFin);
+                        if (metodoPago && metodoPago !== 'todos') params.set('metodoPago', metodoPago);
+                        if (estado && estado !== 'todos') params.set('estado', estado);
+                        if (tieneNota && tieneNota !== 'todos') params.set('tieneNota', tieneNota);
+                        if (buscar) params.set('buscar', buscar);
+                        params.set('limit', limit);
+                        %>
+                        
+                        <!-- Botón Anterior -->
+                        <% if (currentPage > 1) { %>
+                            <% params.set('page', currentPage - 1); %>
+                            <a href="/consultar-pedidos?<%= params.toString() %>" 
+                               class="px-3 py-2 text-black border rounded bg-white hover:bg-gray-100">← Anterior</a>
+                        <% } else { %>
+                            <span class="px-3 py-2 border rounded bg-gray-200 text-gray-500 cursor-not-allowed">← Anterior</span>
+                        <% } %>
+                        
+                        <!-- Números de página -->
+                        <% 
+                        let startPage = Math.max(1, currentPage - 2);
+                        let endPage = Math.min(totalPages, startPage + 4);
+                        if (endPage - startPage < 4) startPage = Math.max(1, endPage - 4);
+                        %>
+                        
+                        <% if (startPage > 1) { %>
+                            <% params.set('page', 1); %>
+                            <a href="/consultar-pedidos?<%= params.toString() %>" 
+                               class="px-3 py-2 text-black border rounded bg-white hover:bg-gray-100">1</a>
+                            <% if (startPage > 2) { %>
+                                <span class="px-3 py-2">...</span>
+                            <% } %>
+                        <% } %>
+                        
+                        <% for (let i = startPage; i <= endPage; i++) { %>
+                            <% if (i === currentPage) { %>
+                                <span class="px-3 py-2 text-black border rounded bg-blue-500 text-white"><%= i %></span>
+                            <% } else { %>
+                                <% params.set('page', i); %>
+                                <a href="/consultar-pedidos?<%= params.toString() %>" 
+                                   class="px-3 py-2 text-black border rounded bg-white hover:bg-gray-100"><%= i %></a>
+                            <% } %>
+                        <% } %>
+                        
+                        <% if (endPage < totalPages) { %>
+                            <% if (endPage < totalPages - 1) { %>
+                                <span class="px-3 py-2">...</span>
+                            <% } %>
+                            <% params.set('page', totalPages); %>
+                            <a href="/consultar-pedidos?<%= params.toString() %>" 
+                               class="px-3 py-2 text-black border rounded bg-white hover:bg-gray-100"><%= totalPages %></a>
+                        <% } %>
+                        
+                        <!-- Botón Siguiente -->
+                        <% if (currentPage < totalPages) { %>
+                            <% params.set('page', currentPage + 1); %>
+                            <a href="/consultar-pedidos?<%= params.toString() %>" 
+                               class="px-3 py-2 text-black border rounded bg-white hover:bg-gray-100">Siguiente →</a>
+                        <% } else { %>
+                            <span class="px-3 py-2 border rounded bg-gray-200 text-gray-500 cursor-not-allowed">Siguiente →</span>
+                        <% } %>
+                        
+                        <!-- Info -->
+                        <span class="ml-4 text-gray-200">
+                            Mostrando <%= ((currentPage - 1) * limit) + 1 %> - 
+                            <%= Math.min(currentPage * limit, totalPedidos) %> de <%= totalPedidos %> pedidos
+                        </span>
+                    </div>
+                <% } %>
+            </div>
+        </div> 
+    </div>
+</div>
+
+<!-- Modales (continúa en el siguiente mensaje por límite de caracteres) -->
+
+<!-- Modal Detalles del Pedido -->
+<div id="modalDetalles" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-lg p-6 w-full max-w-2xl">
+        <h3 class="text-xl font-bold mb-4">
+            🛒 No. <span id="modalPedidoDetalleId"></span> Detalles del Pedido 
+            <span id="modalPedidoNameCliente"></span>
+        </h3>
+        <div class="overflow-x-auto mb-4">
+            <table class="w-full border-collapse border" id="tablaDetalles">
+                <thead>
+                    <tr class="bg-gray-100">
+                        <th class="border p-2">Producto</th>
+                        <th class="border p-2">Trabajado por</th>
+                        <th class="border p-2">Precio</th>
+                        <th class="border p-2">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+        <button onclick="cerrarModalDetalles()" 
+                class="w-full bg-gray-500 text-white p-2 rounded hover:bg-gray-600">
+            Cerrar
+        </button>
+    </div>
+</div>
+
+<!-- Modal Nota -->
+<div id="modalNota" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-lg p-6 w-full max-w-md">
+        <h3 class="text-xl font-bold mb-4">
+            No. <span id="modalNotaPedidoId"></span> Nota del Pedido 
+            <span id="modalNotaPedidoCliente"></span>
+        </h3>
+        <textarea id="notaTextarea" 
+                  class="w-full h-40 p-2 border rounded mb-4 text-lg"></textarea>
+        <div class="flex gap-2">
+            <button onclick="cerrarModalNota()" 
+                    class="flex-1 bg-gray-500 text-white p-2 rounded hover:bg-gray-600">
+                Cerrar
+            </button>
+            <button onclick="guardarNota()" 
+                    class="flex-1 bg-blue-500 text-white p-2 rounded hover:bg-blue-600">
+                Guardar Nota 📝
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Editar Pedido -->
+<div id="modalEditarPedido" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-lg p-6 w-full max-w-md">
+        <h3 class="text-xl font-bold mb-4 border-b-2 border-blue-500 pb-2">✏️ Editar Pedido</h3>
+        
+        <form id="formEditarPedido">
+            <input type="hidden" id="editPedidoId">
+            
+            <div class="mb-4 <%= !is_admin ? 'hidden' : '' %>">
+                <label class="block mb-2 font-bold text-gray-700">Fecha: (año-mes-dia)</label>
+                <input type="text" id="editFecha" required 
+                       class="w-full p-2 border rounded">
+            </div>
+           
+            <div class="mb-4">
+                <label class="block mb-2 font-bold text-gray-700">Método de Pago:</label>
+                <select id="editMetodoPago" required class="w-full p-2 border rounded">
+                    <option value="">-- Seleccionar --</option>
+                    <option value="Efectivo">Efectivo</option>
+                    <option value="Tarjeta">Tarjeta</option>
+                    <option value="Transferencia">Transferencia</option>
+                </select>
+            </div>
+            
+            <div class="mb-4">
+                <label class="block mb-2 font-bold text-gray-700">Cliente:</label>
+                <input type="text" id="editCliente" required 
+                       class="w-full p-2 border rounded">
+            </div>
+            
+            <div class="flex gap-2">
+                <button type="button" onclick="cerrarModalEditar()" 
+                        class="flex-1 bg-gray-500 text-white p-2 rounded hover:bg-gray-600">
+                    Cancelar
+                </button>
+                <button type="submit" 
+                        class="flex-1 bg-blue-500 text-white p-2 rounded hover:bg-blue-600">
+                    Guardar Cambios
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<% if (showNoResultsModal) { %>
+<div id="modalSinResultados" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg p-6 w-full max-w-md">
+        <div class="text-center mb-4">
+            <div class="text-6xl mb-4">📭</div>
+            <h3 class="text-xl font-bold mb-2 text-gray-800">Sin Resultados</h3>
+            <p class="text-gray-600 mb-4">No se encontraron pedidos con los filtros seleccionados.</p>
+        </div>
+        
+        <!-- Mostrar filtros aplicados -->
+        <div class="bg-gray-100 rounded-lg p-4 mb-4 text-sm">
+            <p class="font-bold text-gray-700 mb-2">Filtros aplicados:</p>
+            <ul class="text-gray-600 space-y-1">
+                <% if (fechaInicio) { %>
+                    <li>📅 Desde: <strong><%= fechaInicio %></strong></li>
+                <% } %>
+                <% if (fechaFin) { %>
+                    <li>📅 Hasta: <strong><%= fechaFin %></strong></li>
+                <% } %>
+                <% if (metodoPago && metodoPago !== 'todos') { %>
+                    <li>💳 Método: <strong><%= metodoPago %></strong></li>
+                <% } %>
+                <% if (estado && estado !== 'todos') { %>
+                    <li>✅ Estado: <strong><%= estado %></strong></li>
+                <% } %>
+                <% if (tieneNota && tieneNota !== 'todos') { %>
+                    <li>📝 Nota: <strong><%= tieneNota === 'conNota' ? 'Con Nota' : 'Sin Nota' %></strong></li>
+                <% } %>
+                <% if (buscar && buscar.trim() !== '') { %>
+                    <li>🔍 Búsqueda: <strong>"<%= buscar %>"</strong></li>
+                <% } %>
+            </ul>
+        </div>
+        
+        <div class="flex gap-2">
+            <button onclick="cerrarModalSinResultados()" 
+                    class="flex-1 bg-gray-500 text-white p-2 rounded hover:bg-gray-600">
+                Cerrar
+            </button>
+            <button onclick="limpiarFiltros()" 
+                    class="flex-1 bg-blue-500 text-white p-2 rounded hover:bg-blue-600">
+                Limpiar Filtros
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Función para cerrar el modal
+    function cerrarModalSinResultados() {
+        document.getElementById('modalSinResultados').classList.add('hidden');
+    }
+    
+    // Cerrar con la tecla ESC
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            const modal = document.getElementById('modalSinResultados');
+            if (modal && !modal.classList.contains('hidden')) {
+                cerrarModalSinResultados();
+            }
+        }
+    });
+    
+    // Cerrar al hacer clic fuera del modal
+    document.getElementById('modalSinResultados').addEventListener('click', function(e) {
+        if (e.target === this) {
+            cerrarModalSinResultados();
+        }
+    });
+</script>
+<% } %>
+
+<script>
+// ===================================
+// CONFIGURACIÓN Y ESTADO
+// ===================================
+const Config = {
+    isAdmin: <%= is_admin %>
+};
+
+let idPedidoActual = null;
+let pedidoEditando = null;
+
+// ===================================
+// UTILIDADES
+// ===================================
+const UI = {
+    showModal(modalId) {
+        const modal = document.getElementById(modalId);
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    },
+    
+    hideModal(modalId) {
+        const modal = document.getElementById(modalId);
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    },
+    
+    escapeHtml(text) {
+        return text.replace(/'/g, "\\'").replace(/\n/g, '\\n');
+    }
+};
+
+
+// ===================================
+// MODALES - DETALLES
+// ===================================
+async function verDetalles(pedidoId, nombreCliente) {
+    try {
+        const response = await fetch(`/api/pedidos/detalles/${pedidoId}`);
+        if (!response.ok) throw new Error('Error al obtener los detalles.');
+        
+        const detalles = await response.json();
+        const tbody = document.querySelector('#tablaDetalles tbody');
+        tbody.innerHTML = '';
+        
+        detalles.forEach(detalle => {
+            const row = tbody.insertRow();
+            row.innerHTML = `
+                <td class="border p-2">${detalle.producto_nombre}</td>
+                <td class="border p-2">${detalle.employees_name || 'No asignado'}</td>
+                <td class="border p-2">$${parseFloat(detalle.producto_precio).toFixed(2)}</td>
+                <td class="border p-2">
+                    ${Config.isAdmin ? `
+                        <button onclick="editarDetalle(${detalle.id}, '${UI.escapeHtml(detalle.producto_nombre)}', ${detalle.producto_precio}, '${UI.escapeHtml(detalle.employees_name || '')}')"
+                                class="bg-yellow-500 text-white px-2 py-1 rounded hover:bg-yellow-600 mb-1">
+                            Editar
+                        </button>
+                    ` : ''}
+                    <button onclick="verEnComisiones(${pedidoId})"
+                            class="bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600">
+                        Ver más 👁️
+                    </button>
+                </td>
+            `;
+        });
+        
+        document.getElementById('modalPedidoDetalleId').textContent = pedidoId;
+        document.getElementById('modalPedidoNameCliente').textContent = nombreCliente;
+        UI.showModal('modalDetalles');
+        
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error al obtener los detalles del pedido.');
+    }
+}
+
+function cerrarModalDetalles() {
+    UI.hideModal('modalDetalles');
+}
+
+function verEnComisiones(pedidoId) {
+    cerrarModalDetalles();
+    window.location.href = `/comisiones?pedidoId=${pedidoId}`;
+}
+
+async function editarDetalle(detalleId, nombreActual, precioActual, nombreEmpleadoActual) {
+    const nuevoNombre = prompt("Ingresa el nuevo nombre del producto:", nombreActual);
+    if (nuevoNombre === null) return;
+
+    const nuevoPrecio = prompt("Ingresa el nuevo precio:", precioActual);
+    if (nuevoPrecio === null || isNaN(parseFloat(nuevoPrecio))) {
+        alert("El precio ingresado no es válido.");
+        return;
+    }
+    
+    const nuevoEmpleado = prompt("Ingresa el nuevo nombre del empleado:", nombreEmpleadoActual);
+    if (nuevoEmpleado === null) return;
+    
+    try {
+        const response = await fetch('/api/pedidos/editar/detalle', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                id: detalleId, 
+                nombre: nuevoNombre, 
+                precio: parseFloat(nuevoPrecio),
+                empleado: nuevoEmpleado
+            }),
+        });
+        
+        if (!response.ok) throw new Error('Error al actualizar el detalle.');
+        const result = await response.json();
+
+        if (result.success) {
+            alert('Detalle actualizado correctamente');
+            location.reload();
+        } else {
+            alert('Hubo un problema al actualizar el detalle.');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error: ' + error.message);
+    }
+}
+
+// ===================================
+// MODALES - NOTA
+// ===================================
+function abrirModalNota(pedidoId, nombreCliente, notaActual) {
+    idPedidoActual = pedidoId;
+    document.getElementById('modalNotaPedidoId').textContent = pedidoId;
+    document.getElementById('modalNotaPedidoCliente').textContent = nombreCliente;
+    document.getElementById('notaTextarea').value = notaActual;
+    UI.showModal('modalNota');
+}
+
+function cerrarModalNota() {
+    UI.hideModal('modalNota');
+}
+
+async function guardarNota() {
+    const nuevaNota = document.getElementById('notaTextarea').value;
+
+    try {
+        const response = await fetch('/api/pedidos/editar/nota', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: idPedidoActual, nota: nuevaNota }),
+        });
+
+        if (!response.ok) throw new Error('Error al actualizar la nota.');
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('Nota actualizada correctamente');
+            location.reload();
+        }
+    } catch (error) {
+        alert('Error: ' + error.message);
+    }
+}
+
+// ===================================
+// MODALES - EDITAR PEDIDO
+// ===================================
+function editarPedido(pedidoId, fechaActual, metodoActual, clienteActual) {
+    pedidoEditando = { id: pedidoId, fecha: fechaActual, metodo: metodoActual, cliente: clienteActual };
+    
+    document.getElementById('editPedidoId').value = pedidoId;
+    document.getElementById('editFecha').value = fechaActual;
+    document.getElementById('editMetodoPago').value = metodoActual;
+    document.getElementById('editCliente').value = clienteActual;
+    
+    UI.showModal('modalEditarPedido');
+}
+
+function cerrarModalEditar() {
+    UI.hideModal('modalEditarPedido');
+    pedidoEditando = null;
+}
+
+// ===================================
+// ACCIONES DE PEDIDOS
+// ===================================
+async function eliminarPedido(pedidoId) {
+    if (!confirm("¿Estás seguro de eliminar este pedido? Esta acción es irreversible.")) return;
+    
+    try {
+        const response = await fetch('/api/pedidos/eliminar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ pedidoId }),
+        });
+
+        const result = await response.json();
+        if (result.success) {
+            alert("Pedido eliminado correctamente.");
+            location.reload();
+        }
+    } catch (error) {
+        alert('Error: ' + error.message);
+    }
+}
+
+async function cambiarEstado(pedidoId, estadoActual) {
+    const nuevoEstado = estadoActual === 'Pagado' ? 'Pendiente' : 'Pagado';
+    if (!confirm(`¿Cambiar el estado a "${nuevoEstado}"?`)) return;
+    
+    try {
+        const response = await fetch('/api/pedidos/cambiar/estado', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: pedidoId, estado: nuevoEstado }),
+        });
+
+        const result = await response.json();
+        if (result.success) {
+            alert('Estado actualizado correctamente.');
+            location.reload();
+        }
+    } catch (error) {
+        alert('Error: ' + error.message);
+    }
+}
+
+// ===================================
+// NAVEGACIÓN Y UTILIDADES
+// ===================================
+function changeItemsPerPage(limit) {
+    const url = new URL(window.location.href);
+    url.searchParams.set('limit', limit);
+    url.searchParams.set('page', 1);
+    window.location.href = url.toString();
+}
+
+function limpiarFiltros() {
+    window.location.href = '/consultar-pedidos';
+}
+
+function calcularAlturaHeader() {
+    const headerSticky = document.querySelector('.sticky.top-0.z-20');
+    if (headerSticky) {
+        const altura = headerSticky.offsetHeight;
+        document.documentElement.style.setProperty('--header-height', `${altura}px`);
+    }
+}
+
+// ===================================
+// EVENT LISTENERS
+// ===================================
+document.addEventListener('DOMContentLoaded', function() {
+    // Formulario editar pedido
+    document.getElementById('formEditarPedido')?.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const formData = {
+            id: document.getElementById('editPedidoId').value,
+            fecha: document.getElementById('editFecha').value,
+            metodo_pago: document.getElementById('editMetodoPago').value,
+            cliente: document.getElementById('editCliente').value
+        };
+        
+        try {
+            const submitBtn = this.querySelector('button[type="submit"]');
+            submitBtn.textContent = 'Guardando...';
+            submitBtn.disabled = true;
+            
+            const response = await fetch('/api/pedidos/editar/datos', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData),
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                cerrarModalEditar();
+                alert('Pedido actualizado correctamente');
+                location.reload();
+            }
+        } catch (error) {
+            alert('Error: ' + error.message);
+        }
+    });
+    
+    // Calcular altura del header para sticky
+    calcularAlturaHeader();
+    window.addEventListener('resize', calcularAlturaHeader);
+    
+    // Cerrar modales con ESC
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            cerrarModalDetalles();
+            cerrarModalNota();
+            cerrarModalEditar();
+        }
+    });
+});
+</script>

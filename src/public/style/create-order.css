@@ -1,0 +1,32 @@
+/* ESTE ARCHIVO es solo apara create-order-left modificar con puedas */
+
+/* Contenedor para posicionar el icono */
+.relative {
+  position: relative;
+}
+
+/* Estilo y posición del icono SVG */
+.search-icon {
+  position: absolute;
+  left: 12px; /* Ajusta la distancia desde la izquierda */
+  top: 51px;  /* Ajusta la posición vertical (considerando el label) */
+  transform: translateY(-50%);
+  pointer-events: none; /* Importante: permite hacer clic a través del icono */
+  z-index: 10;
+}
+
+/* Ajustes para los campos generados por TomSelect.
+  El elemento .ts-control es el contenedor principal del campo de búsqueda.
+*/
+.ts-control {
+  /* Hacemos espacio a la izquierda para el icono */
+  padding-left: 40px !important; 
+  
+  /* Re-aplicamos los estilos que tenías (similares a w-full p-2 border rounded) */
+  width: 100%;
+  padding-top: 0.5rem !important;
+  padding-bottom: 0.5rem !important;
+  border: 1px solid #d1d5db; /* Color de borde de Tailwind */
+  border-radius: 0.375rem; /* Borde redondeado de Tailwind */
+}
+

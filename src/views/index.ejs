@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Menú de Navegación</title>
+    <!-- estilos -->
+    <link rel="stylesheet" href="/style/index.css" />
+    <link rel="stylesheet" href="/style/queries.css" />
+    <link rel="stylesheet" href="/style/create-order.css" />
+    <link rel="stylesheet" href="/style/design-manager.css" /> 
+    <link rel="stylesheet" href="/style/dashboardStyle.css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.7.7/handlebars.min.js"></script>
+    <!-- iconos -->
+     <script src="https://unpkg.com/lucide-react@0.292.0/dist/umd/lucide-react.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Tom libreria -->
+    <link href="https://cdn.jsdelivr.net/npm/tom-select/dist/css/tom-select.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/tom-select/dist/js/tom-select.complete.min.js"></script>
+
+</head>
+
+<body>
+        <%- include('./partials/sidebar.ejs') %>
+
+
+
+
+    <!-- Contenido Principal -->
+    <main class="main-grandpa">
+         <!-- Contenido Dinámico -->
+        <%- includeContent(template, { userData: typeof userData !== 'undefined' ? userData : {} }) %>
+              
+        
+        <!-- Ventanas Adicionales (Ocultas por defecto) -->
+        <% if (typeof doubleWindow !== 'undefined' && doubleWindow) { %>
+            <div class="main-uncle" id="extra-windows">
+                <div class="main-first-cousin">
+                    <div class="container">
+                        <%- includeContent(doubleWindow.left, { userData: typeof userData !== 'undefined' ? userData : {} }) %>
+                    </div>
+                </div>
+                <div id="main-second-cousin">
+                    <div class="container">
+                        <%- includeContent(doubleWindow.right, { userData: typeof userData !== 'undefined' ? userData : {} }) %>
+                    </div>
+                </div>
+            </div>
+        <% } %>
+    </main>
+
+   
+<script src="/script/components-main/container-funtions.js"></script>
+<script src="/script/components-main/sidebar-functions.js"></script>
+<script src="/script/components-main/theme-manager.js"></script>
+
+
+
+
+</body>
+</html>

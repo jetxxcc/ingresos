@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reservar cita</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #111827; color: #f9fafb; padding: 2rem; }
+    .card { max-width: 480px; margin: 0 auto; background: #1f2937; padding: 1.5rem; border-radius: 12px; }
+    input, select, button { width: 100%; padding: .7rem; border-radius: 8px; margin-top: .5rem; }
+    button { background: #10b981; color: white; border: 0; cursor: pointer; }
+    .error { color: #fca5a5; margin-top: .5rem; }
+    .success { color: #a7f3d0; margin-top: .5rem; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Reservar una cita</h1>
+    <form id="public-appointment-form">
+      <input type="text" name="cliente_nombre" placeholder="Tu nombre" required />
+      <input type="text" name="cliente_telefono" placeholder="Tu teléfono" />
+      <select name="empleado_id" required>
+        <option value="">Selecciona un empleado</option>
+        <% empleados.forEach(empleado => { %>
+          <option value="<%= empleado.id %>"><%= empleado.name %></option>
+        <% }) %>
+      </select>
+      <input type="datetime-local" name="fecha_hora" required />
+      <input type="number" name="duracion_minutos" value="30" min="15" step="15" />
+      <button type="submit">Reservar</button>
+    </form>
+
+    <h3 style="margin-top: 1rem;">Disponibilidad actual</h3>
+    <ul>
+      <% appointments.forEach(appointment => { %>
+        <li><strong><%= appointment.cliente_nombre %></strong> · <%= appointment.fecha_hora %> · <%= (empleados.find(empleado => empleado.id === appointment.empleado_id) || {}).name || 'Empleado no encontrado' %> · <%= appointment.estado %></li>
+      <% }) %>
+    </ul>
+
+    <% if (error) { %><div class="error"><%= error %></div><% } %>
+    <% if (success) { %><div class="success"><%= success %></div><% } %>
+  </div>
+
+  <script>
+    document.getElementById('public-appointment-form')?.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const form = event.target;
+      const payload = Object.fromEntries(new FormData(form));
+      const response = await fetch('/api/reservar-cita', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await response.json();
+      if (response.ok) {
+        alert('Tu cita fue enviada correctamente');
+        form.reset();
+      } else {
+        alert(data.error || 'No se pudo reservar');
+      }
+    });
+  </script>
+</body>
+</html>

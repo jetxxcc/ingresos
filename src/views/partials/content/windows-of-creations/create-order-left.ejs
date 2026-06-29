@@ -1,0 +1,218 @@
+<div class="content-example">
+    <h1 class="text-2xl font-bold mb-4 flex items-center gap-2">
+        Agregar Pedido
+     <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3">
+        <path d="M440-600v-120H320v-80h120v-120h80v120h120v80H520v120h-80ZM280-80q-33 0-56.5-23.5T200-160q0-33 23.5-56.5T280-240q33 0 56.5 23.5T360-160q0 33-23.5 56.5T280-80Zm400 0q-33 0-56.5-23.5T600-160q0-33 23.5-56.5T680-240q33 0 56.5 23.5T760-160q0 33-23.5 56.5T680-80ZM40-800v-80h131l170 360h280l156-280h91L692-482q-11 20-29.5 31T622-440H324l-44 80h480v80H280q-45 0-68.5-39t-1.5-79l54-98-144-304H40Z"/>
+    </svg>
+    </h1>
+
+    <form id="agregarForm" class="space-y-4">
+
+        <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+            <symbol id="search-icon" viewBox="0 0 24 24">
+                <path
+                    d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+            </symbol>
+        </svg>
+
+        <div class="relative">
+            <label for="clienteScript" class="block mb-2">Cliente:</label>
+            <select id="clienteScript" name="cliente_id" required>
+                <option value="">--Seleccionar--</option>
+                <% clientes.forEach(c=> { %>
+                    <option value="<%= c.id %>">
+                        <%= c.nombre %>
+                            <%= c.apellido %>
+                    </option>
+                    <% }) %>
+            </select>
+            <svg class="search-icon" width="20" height="20" fill="#888">
+                <use xlink:href="#search-icon"></use>
+            </svg>
+        </div>
+
+        <div>
+            <label class="block mb-2">Método de pago:</label>
+            <select id="metodoPagoScript" name="pago" required class="w-full text-black p-2 border rounded">
+                <option value="">--Seleccionar--</option>
+                <option value="Efectivo">Efectivo</option>
+                <option value="Tarjeta">Tarjeta</option>
+				<option value="Cotización">Cotización</option>
+                <option value="Transferencia">Transferencia</option>
+            </select>
+        </div>
+
+        <div>
+            <label class="block mb-2">Empleado encargado:</label>
+            <select id="empleadoScript" name="empleado_id" required 
+            class="w-full text-black p-2 border rounded">
+                <option value="">--Seleccionar--</option>
+                <% employees.forEach(e=> { %>
+                    <option value="<%= e.id %>">
+                        <%= e.name %>
+                    </option>
+                    <% }) %>
+            </select>
+        </div>
+
+        <div class="relative mt-4"> 
+            <label for="productoSelect" class="block mb-2">Producto:</label>
+            <select id="productoSelect" name="producto" required>
+                <% opciones.forEach(op=> { %>
+                    <option value="<%= op.valor %>">
+                        <%= op.textWithPrice %>
+                    </option>
+                    <% }) %>
+            </select>
+            <svg class="search-icon" width="20" height="20" fill="#888">
+                <use xlink:href="#search-icon"></use>
+            </svg>
+        </div>
+
+        <button type="submit" class="w-full bg-green-500 text-white p-2 rounded hover:bg-green-600">
+            Agregar al Carrito
+        </button>
+    </form>
+</div>
+
+<script>
+    // Variables globales
+    let carritoLength = <%= pedidos.length %>;
+    let tomSelectCliente;
+
+    document.addEventListener("DOMContentLoaded", () => {
+        tomSelectCliente = new TomSelect("#clienteScript", {
+            create: false,
+            sortField: { field: "text", direction: "asc" },
+            placeholder: "Buscar cliente...",
+        });
+
+        new TomSelect("#productoSelect", {
+            create: false,
+            sortField: { field: "text", direction: "asc" },
+            placeholder: "Buscar producto...",
+        });
+        // Bloquear al cargar si el carrito ya tiene productos
+        if (carritoLength > 0) {
+            bloquearSelects(true);
+        }
+    });
+
+    function bloquearSelects(bloquear) {
+        const metodo = document.getElementById("metodoPagoScript");
+
+        
+        if (tomSelectCliente) {
+            if (bloquear) {
+                tomSelectCliente.disable(); // Método para bloquear
+            } else {
+                tomSelectCliente.enable();  // Método para desbloquear
+            }
+        }
+
+        
+        if (metodo) {
+            metodo.disabled = bloquear;
+        }
+    }
+
+
+    // Función para actualizar el carrito sin recargar
+    function actualizarCarrito() {
+        fetch('/api/obtener-carrito')
+            .then(response => response.json())
+            .then(data => {
+                // Emitir evento personalizado para actualizar la ventana derecha
+                window.dispatchEvent(new CustomEvent('carritoActualizado', { detail: data }));
+                carritoLength = data.pedidos.length;
+                bloquearSelects(carritoLength > 0);
+
+                // Si el carrito está vacío, resetear los selects
+                if (carritoLength === 0) {
+                    document.getElementById('clienteScript').value = '';
+                    document.getElementById('metodoPagoScript').value = '';
+                } else {
+                    // Actualizar valores si hay pedidos
+                    document.getElementById('clienteScript').value = data.clienteActual;
+                    document.getElementById('metodoPagoScript').value = data.metodoActual;
+                }
+            })
+            .catch(error => console.error('Error actualizando carrito:', error));
+    }
+
+    // Manejar envío del formulario
+    document.getElementById('agregarForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        const formData = {
+            producto: document.getElementById('productoSelect').value,
+            pago: document.querySelector('select[name="pago"]').value,
+            cliente_id: document.getElementById('clienteScript').value,
+            empleado_id: document.getElementById('empleadoScript').value
+        };
+
+        fetch('/Agregar', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formData)
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert(data.error);
+                } else {
+                    // Resetear solo el campo de empleado y producto
+                    document.getElementById('empleadoScript').value = '';
+                    document.getElementById('productoSelect').value = '';
+
+                    // Actualizar carrito sin recargar página
+                    actualizarCarrito();
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error al agregar el producto');
+            });
+    });
+
+    // Escuchar evento de actualización desde la ventana derecha
+    window.addEventListener('carritoActualizado', function (e) {
+        const data = e.detail;
+        carritoLength = data.pedidos.length;
+        bloquearSelects(carritoLength > 0);
+
+        // Si el carrito está vacío, resetear los selects
+        if (carritoLength === 0) {
+            document.getElementById('clienteScript').value = '';
+            document.getElementById('metodoPagoScript').value = '';
+        } else {
+            // Mantener valores si hay pedidos
+            if (data.clienteActual) {
+                document.getElementById('clienteScript').value = data.clienteActual;
+            }
+            if (data.metodoActual) {
+                document.getElementById('metodoPagoScript').value = data.metodoActual;
+            }
+
+        }
+    });
+
+// Mantener selección inicial
+<% if (clienteActual) { %>
+        document.getElementById('clienteScript').value = '<%= clienteActual %>';
+<% } %>
+
+<% if (metodoActual) { %>
+        document.getElementById('metodoPagoScript').value = '<%= metodoActual %>';
+<% } %>
+
+<% if (empleadoActual) { %>
+        document.getElementById('empleadoScript').value = '<%= empleadoActual %>';
+<% } %>
+
+
+
+
+</script>

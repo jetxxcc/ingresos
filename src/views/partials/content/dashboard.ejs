@@ -1,0 +1,173 @@
+<!-- Ventana Principal -->
+<div class="main-father" id="main-window">
+    <div class="main-child">
+        <div class="container">
+            <div class="content-example">
+
+                <div class="">
+
+                    <div class="relative flex flex-col  h-[85vh]">
+
+                        <!-- Contenedor 1 (Arriba) -->
+                        <div id="container-1" class="relative  w-full transition-all duration-500 ease-in-out">
+                            <!-- Contenido del Contenedor 1 -->
+                            <div id="content-1" class=" h-full overflow-y-auto content-fade">
+                                <h2 class="text-3xl font-bold text-white mb-4 flex items-center gap-2">
+                                    Dashboard Superior
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="mt-1" height="32px" viewBox="0 -960 960 960" width="32px" fill="#e3e3e3">
+                                        <path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h240v-560H200v560Zm320 0h240v-280H520v280Zm0-360h240v-200H520v200Z"/>
+                                    </svg>
+                                </h2>
+
+                                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                        <!-- primer chart -->
+  <!-- 1. Gráfico de Ingresos (Ancho Completo) -->
+        <!-- AÑADIMOS 'flex flex-col' para crear un contenedor vertical -->
+        <div class="lg:col-span-2 bg-gray-800 p-4 rounded-lg shadow-lg h-80 flex flex-col">
+            <!-- === Controles Interactivos para el Gráfico === -->
+            <!-- AÑADIMOS 'flex-wrap' para que los controles se ajusten si no hay espacio -->
+            <div class="flex flex-wrap justify-between items-center mb-2 px-2">
+                <!-- Dropdown para Rango de Fechas -->
+                <div class="relative mb-2 sm:mb-0">
+                    <select id="rangoFechaSelect" class="bg-gray-700 text-white border border-gray-600 rounded-lg py-2 px-4 appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="1semana" selected>Una semana</option>
+                            <option value="2semanas">Dos semanas</option>
+                            <% if (is_admin) { %>
+                            <option value="1mes">1 mes</option>
+                            <option value="3meses">3 meses</option>
+                            <option value="6meses">6 meses</option>
+                            <option value="1año">1 año</option>
+                            <option value="2años">2 años</option>
+                            <option value="todo">Todo el tiempo</option>
+                            <%}%>
+                    </select>
+                </div>
+                <!-- Switch para Métrica -->
+                <div class="flex items-center text-white">
+                    <% if (is_admin) { %>
+                    <span class="mr-3 text-sm font-medium">Cantidad</span>
+                    <label for="toggleMetricaIngresos" class="inline-flex relative items-center cursor-pointer">
+                        <input type="checkbox" id="toggleMetricaIngresos" class="sr-only peer">
+                        <div class="w-11 h-6 bg-gray-600 rounded-full peer peer-focus:ring-2 peer-focus:ring-blue-500 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    </label>
+                    <span class="ml-3 text-sm font-medium">Ingresos</span>
+                 <% } else { %>
+                    <!-- Opcionalmente puedes poner un texto vacío o un placeholder -->
+                    <span class="text-gray-500 text-sm italic">Solo visible para administradores</span>
+                <% } %>
+                </div>
+            </div>
+             <!-- === Contenedor para el Canvas === -->
+             <!-- AÑADIMOS 'relative flex-grow' para que el canvas ocupe el espacio restante -->
+            <div class="relative flex-grow">
+                <canvas id="ingresosChart"></canvas>
+            </div>
+        </div>
+                                        <!-- segundo chart -->
+                                        <div class="bg-gray-800 p-4 rounded-lg shadow-lg h-72">
+                                            <canvas id="metodosPagoChart"></canvas>
+                                        </div>
+                                        <!-- tercer chart -->
+                                        <div class="bg-gray-800 p-4 rounded-lg shadow-lg h-72">
+                                            <canvas id="estadosPedidosChart"></canvas>
+                                        </div>
+                                    </div>
+                            </div>
+                        </div>
+
+                        <!-- Contenedor 2 (Abajo) -->
+                        <div id="container-2"
+                            class="relative  w-full border-t border-white transition-all duration-500 ease-in-out">
+                            <!-- Contenido del Contenedor 2 -->
+                            <div id="content-2" class=" h-full overflow-y-auto content-fade">
+                                <h2 class="text-3xl font-bold text-white mb-4 mt-4 flex items-center gap-2">
+                                    Dashboard Inferior
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="mt-1" height="32px" viewBox="0 -960 960 960" width="32px" fill="#e3e3e3">
+                                        <path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm200-80v-240H200v240h200Zm80 0h280v-240H480v240ZM200-520h560v-240H200v240Z"/>
+                                    </svg>
+                                </h2>
+                                           <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+                                                <div class="lg:col-span-2 bg-gray-800 p-4 rounded-lg shadow-lg h-80">
+                                                    <canvas id="topClientesChart"></canvas>
+                                                </div>
+
+                                                <div class="bg-gray-800 p-4 rounded-lg shadow-lg h-72">
+                                                    <canvas id="topProductosChart"></canvas>
+                                                </div>
+                                                
+                                                <div class="bg-gray-800 p-4 rounded-lg shadow-lg h-72 flex flex-col">
+                                                    <div class="flex flex-wrap justify-between items-center mb-2 px-2">
+                                                         <!-- Filtro de Tiempo -->
+                                                    <div class="relative mb-2 sm:mb-0">
+                                                       
+                                                        <select id="filtroTiempoEmpleado" class="bg-gray-700 text-white border border-gray-600 rounded-lg py-2 px-4 appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                                              <option value="1semana" selected>Una semana</option>
+                                                            <option value="2semanas">Dos semanas</option>
+                                                            <% if (is_admin) { %>
+                                                            <option value="1mes">1 mes</option>
+                                                            <option value="3meses">3 meses</option>
+                                                            <option value="6meses">6 meses</option>
+                                                            <option value="1año">1 año</option>
+                                                            <option value="2años">2 años</option>
+                                                            <option value="todo">Todo el tiempo</option>
+                                                            <%}%>
+                                                        </select>
+                                                     
+                                                    </div>  
+                                                        
+                                                        <!-- Toggle Switch -->
+                                                        <div class="flex items-center text-white">
+                                                            <% if (is_admin) { %>
+                                                            <span class="mr-3 text-sm font-medium">Cantidad</span>
+                                                            <label for="toggleMetricaEmpleado" class="inline-flex relative items-center cursor-pointer">
+                                                                <input type="checkbox" value="" id="toggleMetricaEmpleado" class="sr-only peer">
+                                                                <div class="w-11 h-6 bg-gray-600 rounded-full peer peer-focus:ring-2 peer-focus:ring-blue-500 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                                            </label>
+                                                            <span class="ml-3 text-sm font-medium">Ingresos</span>
+                                                           <% }else{%>
+                                                            <span class="text-gray-500 text-sm italic">Solo visible para administradores</span>
+                                                            <%}%>
+                                                        </div>
+                                                    </div>
+                                                                    <!-- chart -->
+                                                            <div class="relative flex-grow">
+                                                                <canvas id="ventasEmpleadoChart"></canvas>
+                                                            </div>
+                                                </div>
+                                                
+                                                
+
+                                            </div>
+                            </div>
+                        </div>
+
+                        <!-- Botón Único de Control -->
+                        <button id="toggle-btn-dashboard"
+                            class="absolute left-1/2 -translate-x-1/2 z-20 bg-white p-2 rounded-full shadow-lg border border-gray-200 hover:bg-gray-50 transition-all duration-500 ease-in-out -translate-y-1/2">
+                            <!-- El SVG de la flecha se insertará aquí con JS -->
+                        </button>
+
+                    </div>
+                </div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+
+<script src="/script/components-dashboard/slider-container-functions.js"></script>
+<!-- charts funtions slider 1-->
+<script src="/script/components-dashboard/components-charts/line-income-fuctions.js"></script>
+<script src="/script/components-dashboard/components-charts/donut-chart-functions.js"></script>
+<script src="/script/components-dashboard/components-charts/bar-metodopago-fuctions.js"></script>
+<!-- charts funtions slider 2-->
+<script src="/script/components-dashboard/components-charts/barchart-topcustomer-fuctions.js"></script>
+<script src="/script/components-dashboard/components-charts/bar-toproducts-fuctions.js"></script>
+<script src="/script/components-dashboard/components-charts/bar-employees-fuctions.js"></script>
+
+<script>
+    // Usamos <%- %> para imprimir el JSON de forma segura
+    const chartData = <%- JSON.stringify(chartData || {}) %>;
+</script>
+            </div>
+        </div>
+    </div>
+</div>

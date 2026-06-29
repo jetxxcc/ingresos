@@ -1,0 +1,217 @@
+<div class="content-example">
+    <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+        Lista de Empleados
+        <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3">
+            <path d="M440-480q-66 0-113-47t-47-113q0-66 47-113t113-47q66 0 113 47t47 113q0 66-47 113t-113 47Zm0-80q33 0 56.5-23.5T520-640q0-33-23.5-56.5T440-720q-33 0-56.5 23.5T360-640q0 33 23.5 56.5T440-560ZM884-20 756-148q-21 12-45 20t-51 8q-75 0-127.5-52.5T480-300q0-75 52.5-127.5T660-480q75 0 127.5 52.5T840-300q0 27-8 51t-20 45L940-76l-56 56ZM660-200q42 0 71-29t29-71q0-42-29-71t-71-29q-42 0-71 29t-29 71q0 42 29 71t71 29Zm-540 40v-111q0-34 17-63t47-44q51-26 115-44t142-18q-12 18-20.5 38.5T407-359q-60 5-107 20.5T221-306q-10 5-15.5 14.5T200-271v31h207q5 22 13.5 42t20.5 38H120Zm320-480Zm-33 400Z"/>
+        </svg>
+    </h2>
+    
+    <!-- Buscador -->
+    <div class="mb-4">
+        <input type="text" 
+               id="searchEmpleados" 
+               placeholder="Buscar empleado por nombre..."
+               class="w-full p-2 border text-black rounded focus:border-blue-500 focus:outline-none">
+    </div>
+    
+    <div id="empleados-container" class="relative overflow-y-auto max-h-[600px] shadow-md rounded-lg border border-gray-200 custom-scroll">
+        <!-- Tabla inicial -->
+    </div>
+</div>
+
+<!-- Modal para editar empleado -->
+<div id="modalEditarEmpleado" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-lg p-6 w-full max-w-md">
+        <h3 class="text-xl font-bold mb-4 text-black">Editar Empleado</h3>
+        
+        <form id="formEditarEmpleado">
+            <input type="hidden" id="editEmpleadoId">
+            
+            <div class="mb-4">
+                <label class="block mb-2 font-bold text-gray-700">Nombre: *</label>
+                <input type="text" id="editName" required 
+                       class="w-full p-2 border border-black text-black rounded">
+            </div>
+            
+            <div class="flex gap-2">
+                <button type="button" onclick="cerrarModalEditar()" 
+                        class="flex-1 bg-gray-500 text-white p-2 rounded hover:bg-gray-600">
+                    Cancelar
+                </button>
+                <button type="submit" 
+                        class="flex-1 bg-blue-500 text-white p-2 rounded hover:bg-blue-600">
+                    Guardar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+let todosLosEmpleados = [];
+
+function renderizarEmpleados(empleados) {
+    const container = document.getElementById('empleados-container');
+    
+    if (!empleados || empleados.length === 0) {
+        container.innerHTML = '<p class="text-gray-200 text-center p-4">No hay empleados registrados</p>';
+        return;
+    }
+    
+    let html = `
+        <table class="w-full text-sm text-left"">
+            <thead class="sticky top-0 text-xs text-gray-700 uppercase bg-gray-100 z-10">
+                <tr>
+                    <th scope="col" class="px-6 py-3 font-semibold">ID</th>
+                    <th scope="col" class="px-6 py-3 font-semibold">Nombre</th>
+                    <% if(is_admin) {%>
+                    <th scope="col" class="px-6 py-3 font-semibold">Acciones</th>
+                    <%}%>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+    
+    empleados.forEach(empleado => {
+        const nameEscaped = empleado.name.replace(/'/g, "\\'");
+        
+        html += `
+            <tr class="border-b hover:bg-gray-600">
+                <td class="p-1">${empleado.id}</td>
+                <td class="p-1">${empleado.name}</td>
+                <% if(is_admin) {%>
+                <td class="p-1">
+                    <button onclick="editarEmpleado(${empleado.id}, '${nameEscaped}')"
+                            class="icons-custom-color hover:text-blue-600 mt-2" >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
+                    </button>
+                    <button onclick="eliminarEmpleado(${empleado.id})"
+                           class="icons-custom-color hover:text-red-600 mt-2 ml-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                    </button>
+                </td>
+                <%}%>
+            </tr>
+        `;
+    });
+    
+    html += '</tbody></table>';
+    container.innerHTML = html;
+}
+
+function buscarEmpleados(termino) {
+    if (!termino || termino.trim() === '') {
+        renderizarEmpleados(todosLosEmpleados);
+        return;
+    }
+    
+    const terminoLower = termino.toLowerCase();
+    const empleadosFiltrados = todosLosEmpleados.filter(empleado => {
+        const name = (empleado.name || '').toLowerCase();
+        return name.includes(terminoLower);
+    });
+    
+    renderizarEmpleados(empleadosFiltrados);
+}
+
+function actualizarListaEmpleados() {
+    fetch('/api/obtener-empleados')
+        .then(response => response.json())
+        .then(data => {
+            todosLosEmpleados = data.empleados;
+            const searchInput = document.getElementById('searchEmpleados');
+            if (searchInput && searchInput.value.trim()) {
+                buscarEmpleados(searchInput.value);
+            } else {
+                renderizarEmpleados(todosLosEmpleados);
+            }
+        })
+        .catch(error => console.error('Error actualizando empleados:', error));
+}
+
+function editarEmpleado(id, name) {
+    document.getElementById('editEmpleadoId').value = id;
+    document.getElementById('editName').value = name;
+    
+    document.getElementById('modalEditarEmpleado').classList.remove('hidden');
+    document.getElementById('modalEditarEmpleado').classList.add('flex');
+}
+
+function cerrarModalEditar() {
+    document.getElementById('modalEditarEmpleado').classList.add('hidden');
+    document.getElementById('modalEditarEmpleado').classList.remove('flex');
+}
+
+function eliminarEmpleado(id) {
+    if (!confirm('¿Estás seguro de eliminar este empleado?')) return;
+    
+    fetch(`/eliminarEmpleado/${id}`, {
+        method: 'POST'
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            alert('Empleado eliminado correctamente');
+            actualizarListaEmpleados();
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error al eliminar el empleado');
+    });
+}
+
+document.getElementById('formEditarEmpleado').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const id = document.getElementById('editEmpleadoId').value;
+    const data = {
+        name: document.getElementById('editName').value.trim()
+    };
+
+    if (!data.name) {
+        alert('El nombre es obligatorio');
+        return;
+    }
+
+    fetch(`/editarEmpleado/${id}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    })
+    .then(response => {
+        return response.json().then(data => {
+            return { status: response.status, ok: response.ok, data: data };
+        });
+    })
+    .then(({ status, ok, data }) => {
+        if (!ok) {
+            alert(data.error || 'Error desconocido');
+            return;
+        }
+        
+        if (data.success) {
+            alert('Empleado actualizado correctamente');
+            cerrarModalEditar();
+            actualizarListaEmpleados();
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error al actualizar el empleado: ' + error.message);
+    });
+});
+
+window.addEventListener('empleadosActualizados', actualizarListaEmpleados);
+
+document.addEventListener('DOMContentLoaded', function() {
+    const empleadosIniciales = <%- JSON.stringify(empleados) %>;
+    todosLosEmpleados = empleadosIniciales;
+    renderizarEmpleados(todosLosEmpleados);
+    
+    const searchInput = document.getElementById('searchEmpleados');
+    searchInput.addEventListener('input', function(e) {
+        buscarEmpleados(e.target.value);
+    });
+});
+</script>

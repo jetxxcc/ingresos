@@ -1,0 +1,274 @@
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    height: 100%;
+    margin: 0;
+}
+
+body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    padding: 20px;
+}
+
+.signup-container {
+    width: 100%;
+    max-width: 440px;
+    animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.card {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+}
+
+.card-body {
+    padding: 2.5rem;
+}
+
+.logo-container {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.b-logo {
+    width: 55%;
+    height: auto;
+    max-width: 130px;
+    margin-bottom: 1rem;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.logo-container h1 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #2d3748;
+    margin-bottom: 0.5rem;
+}
+
+.logo-container p {
+    color: #718096;
+    font-size: 0.95rem;
+}
+
+/* Alertas mejoradas */
+.alert {
+    border: none;
+    border-radius: 10px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.alert i {
+    margin-right: 0.5rem;
+}
+
+.alert-danger {
+    background-color: #f8d7da;
+    color: #721c24;
+    border-left: 4px solid #dc3545;
+}
+
+.alert ul {
+    margin: 0;
+    padding-left: 1.5rem;
+}
+
+/* Campos de formulario mejorados */
+.form-floating {
+    margin-bottom: 1.25rem;
+    position: relative;
+}
+
+.form-floating input {
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 1rem 1rem 1rem 3rem;
+    height: 58px;
+    transition: all 0.3s ease;
+}
+
+.form-floating input:focus {
+    border-color: #11998e;
+    box-shadow: 0 0 0 0.2rem rgba(17, 153, 142, 0.15);
+}
+
+.form-floating label {
+    padding-left: 3rem;
+    color: #718096;
+}
+
+ .form-floating .form-floating-icon {
+    position: absolute;
+    z-index: 2;
+    color: #718096;
+    /* ---- ESTADO INICIAL (Centrado, igual que el label) ---- */
+    top: 50%;
+    left: 1rem; /* Posición horizontal del icono */
+    transform: translateY(-50%) scale(1); 
+    transition: all 0.2s ease-in-out;
+    transform-origin: top left; 
+ }
+
+
+.form-floating input:focus ~ .form-floating-icon,
+.form-floating input:not(:placeholder-shown) ~ .form-floating-icon {
+    
+    top: 8px; /* Ajusta esto para la altura vertical deseada */
+    transform: translateY(0) scale(0.85); /* Encogemos el icono un 15% */
+}
+
+
+.form-floating input:focus ~ .form-floating-icon {
+    color: #667eea;
+}
+
+/* Indicador de fortaleza de contraseña */
+.password-strength {
+    height: 4px;
+    background-color: #e2e8f0;
+    border-radius: 2px;
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+    overflow: hidden;
+    display: none;
+}
+
+.password-strength-bar {
+    height: 100%;
+    width: 0%;
+    transition: all 0.3s ease;
+    border-radius: 2px;
+}
+
+.password-strength-text {
+    font-size: 0.85rem;
+    margin-top: 0.25rem;
+    display: none;
+}
+
+/* Requisitos de contraseña */
+.password-requirements {
+    background-color: #f7fafc;
+    border-radius: 8px;
+    padding: 0.75rem;
+    margin-bottom: 1rem;
+    font-size: 0.85rem;
+    color: #4a5568;
+}
+
+.password-requirements ul {
+    margin: 0;
+    padding-left: 1.5rem;
+}
+
+.password-requirements li {
+    margin-bottom: 0.25rem;
+}
+
+.requirement-met {
+    color: #38a169;
+}
+
+.requirement-met i {
+    margin-right: 0.25rem;
+}
+
+/* Botón mejorado */
+.btn-signup {
+    width: 100%;
+    padding: 0.9rem;
+    font-size: 1.05rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    color: white;
+    transition: all 0.3s ease;
+    margin-top: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.btn-signup:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(17, 153, 142, 0.4);
+}
+
+.btn-signup:active {
+    transform: translateY(0);
+}
+
+/* Enlaces */
+.login-link {
+    text-align: center;
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e2e8f0;
+}
+
+.login-link a {
+    color: #11998e;
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.3s ease;
+}
+
+.login-link a:hover {
+    color: #0d7a70;
+    text-decoration: underline;
+}
+
+/* Footer */
+.footer {
+    text-align: center;
+    margin-top: 2rem;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.9rem;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+    .card-body {
+        padding: 1.5rem;
+    }
+
+    .logo-container h1 {
+        font-size: 1.5rem;
+    }
+}
