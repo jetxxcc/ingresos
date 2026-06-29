@@ -7,8 +7,11 @@ require('dotenv').config();
 class BackupHelper {
     constructor() {
         this.dbDir = path.join(__dirname, '..', 'db');
-        this.backupDir = process.env.ROUTEBACKUP || path.join(this.dbDir, 'backups', 'auto');
-        this.autoBackupFile = path.join(this.backupDir, 'backup.db');
+        const configuredBackupDir = typeof process.env.ROUTEBACKUP === 'string' && process.env.ROUTEBACKUP.trim() !== ''
+            ? process.env.ROUTEBACKUP.trim()
+            : null;
+        this.backupDir = configuredBackupDir || path.join(this.dbDir, 'backups', 'auto');
+        this.autoBackupFile = path.join(this.backupDir || path.join(this.dbDir, 'backups', 'auto'), 'backup.db');
         const sqliteBinary = process.platform === 'win32' ? 'sqlite3.exe' : 'sqlite3';
         this.sqlite3Path = path.join(this.dbDir, sqliteBinary);
         this.ensureDirectoriesExist();

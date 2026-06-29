@@ -100,9 +100,15 @@ const startAutoBackup = () => {
     
     // Esperar 2 minutos antes del primer backup para que la app esté totalmente estable
     setTimeout(() => {
-        const BackupHelper = require('./helpers/backupHelper');
-        const backupHelper = new BackupHelper();
-        
+        let backupHelper;
+        try {
+            const BackupHelper = require('./helpers/backupHelper');
+            backupHelper = new BackupHelper();
+        } catch (error) {
+            console.error('No se pudo inicializar BackupHelper:', error);
+            return;
+        }
+
         // Configurar backups automáticos cada 1 hora
         const BACKUP_INTERVAL = 60 * 60 * 1000;
         

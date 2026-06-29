@@ -33,9 +33,17 @@ console.log('SQLite dbPath:', dbPath);
 console.log('dbDir exists:', fs.existsSync(dbDir));
 console.log('dbPath exists before open:', fs.existsSync(dbPath));
 
+let resolveReady;
+let rejectReady;
+const dbReady = new Promise((resolve, reject) => {
+    resolveReady = resolve;
+    rejectReady = reject;
+});
+
 const db = new sqlite3.Database(dbPath, sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE, (err) => {
     if (err) {
         console.error('Error abriendo la base de datos SQLite:', dbPath, err);
+        rejectReady(err);
         return;
     }
 
@@ -57,12 +65,14 @@ const db = new sqlite3.Database(dbPath, sqlite3.OPEN_READWRITE | sqlite3.OPEN_CR
         `, (createErr) => {
             if (createErr) {
                 console.error('Error creando tabla users:', createErr);
+                rejectReady(createErr);
                 return;
             }
 
             db.get(`SELECT COUNT(*) AS count FROM users`, [], async (countErr, row) => {
                 if (countErr) {
                     console.error('Error contando usuarios:', countErr);
+                    rejectReady(countErr);
                     return;
                 }
 
@@ -79,19 +89,23 @@ const db = new sqlite3.Database(dbPath, sqlite3.OPEN_READWRITE | sqlite3.OPEN_CR
                         `, [adminName, adminUsername, hashedPassword], function (insertErr) {
                             if (insertErr) {
                                 console.error('Error insertando usuario admin inicial:', insertErr);
-                                return;
+                            } else {
+                                console.log(`Usuario admin inicial creado: ${adminUsername}`);
+                                console.log('Si estás usando credenciales por defecto, cambia ADMIN_USERNAME y ADMIN_PASSWORD en el despliegue.');
                             }
-
-                            console.log(`Usuario admin inicial creado: ${adminUsername}`);
-                            console.log('Si estás usando credenciales por defecto, cambia ADMIN_USERNAME y ADMIN_PASSWORD en el despliegue.');
+                            resolveReady();
                         });
                     } catch (hashErr) {
                         console.error('Error generando contraseña admin:', hashErr);
+                        rejectReady(hashErr);
                     }
+                } else {
+                    resolveReady();
                 }
             });
         });
     });
 });
 
+db.ready = dbReady;
 module.exports = db;
